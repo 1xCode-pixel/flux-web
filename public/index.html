@@ -6,7 +6,7 @@
     <title>Flux Search</title>
     <style>
         :root {
-            --bg: #050505;
+            --bg: #050505; /* Почти черный фон */
             --fg: #e0e0e0;
             --accent: #fff;
             --font: 'Courier New', monospace;
@@ -21,17 +21,30 @@
             font-family: var(--font);
             height: 100vh;
             overflow: hidden;
+            position: relative;
         }
 
-        /* --- Анимации --- */
+        /* --- МАТРИЦА (ФОН) --- */
+        canvas#matrixCanvas {
+            position: fixed;
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            z-index: -1; /* Самый важный момент: ставим ПОЗАДИ текста */
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        /* Класс, который делает матрицу видимой */
+        body.matrix-active canvas#matrixCanvas {
+            opacity: 1;
+        }
+
+        /* --- Анимации интерфейса --- */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes expandBar {
-            from { width: 0%; }
-            to { width: 100%; }
         }
 
         /* --- Главный экран (Поисковик) --- */
@@ -43,22 +56,24 @@
             justify-content: center;
             align-items: center;
             z-index: 10;
-            background: var(--bg);
             transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
         
-        /* Класс для скрытия главной страницы при поиске */
+        /* Скрытие главной страницы при переходе к браузеру */
         .home-container.hidden {
-            transform: translateY(-100vh);
+            transform: translateY(-120vh);
+            opacity: 0;
         }
 
         h1.logo {
-            font-size: 4rem;
-            letter-spacing: 10px;
+            font-size: 3.5rem; /* Чуть меньше для мобилок */
+            letter-spacing: 8px;
             margin-bottom: 40px;
             text-transform: uppercase;
             animation: fadeIn 1s ease;
             cursor: default;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            text-align: center;
         }
 
         .search-wrapper {
@@ -66,6 +81,9 @@
             width: 90%;
             max-width: 600px;
             animation: fadeIn 1.5s ease;
+            /* Полупрозрачный фон, чтобы текст читался на фоне матрицы */
+            background: rgba(0, 0, 0, 0.7); 
+            border-radius: 4px;
         }
 
         input.main-search {
@@ -90,42 +108,39 @@
             display: flex;
             gap: 20px;
             animation: fadeIn 2s ease;
+            flex-wrap: wrap; /* Чтобы кнопки переносились на маленьких экранах */
+            justify-content: center;
         }
 
         button.action-btn {
-            background: transparent;
-            border: 1px solid #333;
-            color: #777;
-            padding: 10px 25px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 12px 30px;
             cursor: pointer;
             font-family: var(--font);
             text-transform: uppercase;
             font-size: 0.9rem;
             transition: all 0.3s;
+            font-weight: bold;
         }
 
         button.action-btn:hover {
             border-color: var(--accent);
             color: var(--accent);
-            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
         }
 
-        button.active-protect {
-            background: var(--fg);
-            color: var(--bg) !important;
-            border-color: var(--fg);
-        }
-
-        /* --- Экран Браузера (появляется после поиска) --- */
+        /* --- Экран Браузера --- */
         .browser-ui {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             flex-direction: column;
-            transform: translateY(100vh); /* Спрятан внизу */
+            transform: translateY(100vh);
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 20;
-            background: var(--bg);
+            background: var(--bg); /* Фон браузера должен быть сплошным */
         }
 
         .browser-ui.active {
@@ -133,22 +148,23 @@
         }
 
         .top-bar {
-            height: 50px;
+            height: 60px;
             border-bottom: 1px solid #333;
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            gap: 15px;
+            padding: 0 10px;
+            gap: 10px;
             background: #000;
         }
 
         .mini-input {
             flex-grow: 1;
             background: #111;
-            border: none;
+            border: 1px solid #333;
             color: var(--fg);
-            padding: 8px;
+            padding: 10px;
             font-family: var(--font);
+            font-size: 1rem;
         }
 
         iframe#viewer {
@@ -157,101 +173,73 @@
             background: #fff;
         }
 
-        /* --- Матрица (Защитный слой) --- */
-        canvas#matrixCanvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 999;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s;
-            background: black;
+        /* Адаптация под телефоны */
+        @media (max-width: 600px) {
+            h1.logo { font-size: 2.5rem; letter-spacing: 4px; }
+            .action-btn { padding: 10px 20px; font-size: 0.8rem; }
+            .top-bar { padding: 0 5px; gap: 5px; }
         }
-
-        body.protected canvas#matrixCanvas {
-            opacity: 1;
-            pointer-events: auto; /* Блокирует клики */
-        }
-        
-        .unlock-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            display: none;
-            border: 1px solid red;
-            color: red;
-            background: black;
-        }
-        
-        body.protected .unlock-btn { display: block; }
 
     </style>
 </head>
-<body>
-
-    <canvas id="matrixCanvas"></canvas>
-    <button class="action-btn unlock-btn" onclick="toggleProtection()">Снять защиту</button>
+<body class="matrix-active"> <canvas id="matrixCanvas"></canvas>
 
     <div class="home-container" id="homeContainer">
         <h1 class="logo">FLUX WEB</h1>
         
         <div class="search-wrapper">
-            <input type="text" class="main-search" id="mainInput" placeholder="Введите запрос или URL..." autofocus>
+            <input type="text" class="main-search" id="mainInput" placeholder="Введите запрос..." autofocus autocomplete="off">
         </div>
 
         <div class="search-actions">
             <button class="action-btn" onclick="startSearch()">Поиск</button>
-            <button class="action-btn" id="protectBtn" onclick="toggleProtection()">Включить защиту</button>
+            <button class="action-btn" id="matrixBtn" onclick="toggleMatrix()">Анимация: ВКЛ</button>
         </div>
         
-        <div style="margin-top: 50px; opacity: 0.3; font-size: 0.8rem;">
-            Secure Proxy Engine v2.0
+        <div style="margin-top: 50px; opacity: 0.4; font-size: 0.7rem;">
+            SECURE PROXY :: NO LOGS
         </div>
     </div>
 
     <div class="browser-ui" id="browserUi">
         <div class="top-bar">
-            <button class="action-btn" onclick="goHome()" style="padding: 5px 10px;">FLUX</button>
-            <button class="action-btn" onclick="window.history.back()" style="padding: 5px 10px;">&lt;</button>
+            <button class="action-btn" onclick="goHome()" style="padding: 5px 12px;">Flux</button>
+            
+            <button class="action-btn" onclick="window.history.back()" style="padding: 5px 12px;">&lt;</button>
+            
             <input type="text" class="mini-input" id="browserInput">
-            <button class="action-btn" onclick="browserSearch()" style="padding: 5px 10px;">GO</button>
-            <button class="action-btn" onclick="toggleProtection()" style="padding: 5px 10px;">🛡️</button>
+            
+            <button class="action-btn" onclick="browserSearch()" style="padding: 5px 12px;">GO</button>
         </div>
         <iframe id="viewer" src=""></iframe>
     </div>
 
     <script>
-        // --- Логика переключения экранов ---
+        // --- Логика переходов ---
         const homeContainer = document.getElementById('homeContainer');
         const browserUi = document.getElementById('browserUi');
         const mainInput = document.getElementById('mainInput');
         const browserInput = document.getElementById('browserInput');
         const viewer = document.getElementById('viewer');
 
-        // Обработка Enter в полях ввода
+        // Enter нажимает поиск
         mainInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') startSearch(); });
         browserInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') browserSearch(); });
 
         function isUrl(str) {
-            // Простая проверка: есть ли точка и нет ли пробелов, или начинается ли с http
             return (str.includes('.') && !str.includes(' ')) || str.startsWith('http');
         }
 
         function getTargetUrl(input) {
             if (isUrl(input)) {
-                return input; // Это сайт
+                return input;
             } else {
-                // Это поисковый запрос -> ищем в DuckDuckGo
                 return `https://duckduckgo.com/?q=${encodeURIComponent(input)}`;
             }
         }
 
         function loadUrl(url) {
             const target = getTargetUrl(url);
-            // Используем наш прокси API
             viewer.src = `/api/proxy?url=${encodeURIComponent(target)}`;
             browserInput.value = target;
         }
@@ -259,11 +247,8 @@
         function startSearch() {
             const query = mainInput.value;
             if(!query) return;
-
-            // Анимация уезда главной страницы
             homeContainer.classList.add('hidden');
             browserUi.classList.add('active');
-
             loadUrl(query);
         }
 
@@ -274,38 +259,45 @@
         function goHome() {
             homeContainer.classList.remove('hidden');
             browserUi.classList.remove('active');
-            viewer.src = ''; // Остановить загрузку
+            viewer.src = ''; 
             mainInput.value = '';
             mainInput.focus();
         }
 
-        // --- Логика Защиты (Матрица) ---
-        let protectionEnabled = false;
-        let matrixInterval;
+        // --- Логика Матрицы (Фон) ---
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
-        const protectBtn = document.getElementById('protectBtn');
+        const matrixBtn = document.getElementById('matrixBtn');
+        let isMatrixOn = true;
+        let matrixInterval;
 
+        // Настройка символов
+        const chars = "#%&"; 
+
+        // Инициализация размеров
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const binary = "10";
         const fontSize = 16;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.ceil(columns)).fill(1);
 
         function drawMatrix() {
-            // Полупрозрачный фон для следа
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            // Эффект затухания (полупрозрачный черный)
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            ctx.fillStyle = '#0F0'; // Зеленый хакерский цвет
+            // Цвет текста (БЕЛЫЙ, как ты просил)
+            ctx.fillStyle = '#ffffff'; 
             ctx.font = fontSize + 'px Courier New';
 
             for (let i = 0; i < drops.length; i++) {
-                const text = binary.charAt(Math.floor(Math.random() * binary.length));
+                // Случайный символ из набора # % &
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                 
+                // Рандомный сброс капли наверх
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
@@ -313,27 +305,40 @@
             }
         }
 
-        function toggleProtection() {
-            protectionEnabled = !protectionEnabled;
-            
-            if (protectionEnabled) {
-                document.body.classList.add('protected');
-                protectBtn.textContent = "ВЫКЛЮЧИТЬ";
-                protectBtn.classList.add('active-protect');
-                matrixInterval = setInterval(drawMatrix, 50);
-            } else {
-                document.body.classList.remove('protected');
-                protectBtn.textContent = "ВКЛЮЧИТЬ ЗАЩИТУ";
-                protectBtn.classList.remove('active-protect');
-                clearInterval(matrixInterval);
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Очистить экран
-            }
+        function startMatrix() {
+            if (matrixInterval) clearInterval(matrixInterval);
+            matrixInterval = setInterval(drawMatrix, 50); // Скорость дождя
+            document.body.classList.add('matrix-active');
+            matrixBtn.textContent = "Анимация: ВКЛ";
+            isMatrixOn = true;
         }
 
+        function stopMatrix() {
+            clearInterval(matrixInterval);
+            document.body.classList.remove('matrix-active');
+            matrixBtn.textContent = "Анимация: ВЫКЛ";
+            isMatrixOn = false;
+        }
+
+        function toggleMatrix() {
+            if (isMatrixOn) stopMatrix();
+            else startMatrix();
+        }
+
+        // Запуск при старте
+        startMatrix();
+
+        // Адаптация при повороте экрана
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            // Пересчет колонок (чтобы дождь не ломался при ресайзе)
+            const newColumns = canvas.width / fontSize;
+            if (newColumns > drops.length) {
+                for(let i=drops.length; i<newColumns; i++) drops.push(0);
+            }
         });
+
     </script>
 </body>
 </html>
