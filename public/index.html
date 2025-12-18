@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flux Web OS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Flux Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --neon: #00f3ff; /* Голубой неон */
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(0, 243, 255, 0.3);
-            --text: #e0e0e0;
+            --bg: #000000;
+            --fg: #ffffff;
+            --gray: #333333;
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -19,8 +17,8 @@
         body {
             margin: 0;
             background: var(--bg);
-            color: var(--text);
-            font-family: 'Share Tech Mono', monospace;
+            color: var(--fg);
+            font-family: 'Courier Prime', monospace; /* Моноширинный шрифт */
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -33,10 +31,17 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 0;
-            opacity: 0.3; /* Чтобы не мешал читать */
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none; /* Пропускает клики */
+        }
+        
+        /* Видна только в режиме защиты */
+        body.protected-mode #matrixCanvas {
+            opacity: 0.4;
         }
 
-        /* --- СТАРТОВЫЙ ЭКРАН --- */
+        /* --- ГЛАВНЫЙ ЭКРАН --- */
         .home-view {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -45,129 +50,122 @@
             justify-content: center;
             align-items: center;
             z-index: 10;
-            background: rgba(5, 5, 5, 0.8);
-            backdrop-filter: blur(10px); /* Эффект стекла */
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            background: var(--bg); /* Сплошной черный */
+            transition: transform 0.5s ease;
         }
 
         .home-view.hidden { transform: translateY(-100%); }
 
-        .logo-big {
+        .logo {
             font-size: 4rem;
-            color: var(--neon);
-            text-shadow: 0 0 20px var(--neon);
-            margin-bottom: 40px;
-            letter-spacing: 5px;
+            font-weight: bold;
+            margin-bottom: 50px;
+            letter-spacing: -2px;
             text-transform: uppercase;
+            border: 2px solid #fff;
+            padding: 10px 20px;
+            background: #000;
         }
 
         .search-wrap {
-            position: relative;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
+            border-bottom: 2px solid #fff;
         }
 
         .main-input {
             width: 100%;
-            background: var(--glass);
-            border: 1px solid var(--border);
+            background: transparent;
+            border: none;
             color: #fff;
-            padding: 20px;
-            font-size: 1.2rem;
+            padding: 15px;
+            font-size: 1.5rem;
             text-align: center;
             font-family: inherit;
-            border-radius: 50px; /* Круглые края */
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
-            transition: 0.3s;
         }
+        
+        .main-input::placeholder { color: #555; }
 
-        .main-input:focus {
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
-            border-color: var(--neon);
-        }
-
-        .status-text {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: var(--neon);
-            opacity: 0.7;
+        /* --- ПЕРЕКЛЮЧАТЕЛЬ (ЧБ) --- */
+        .toggle-btn {
+            margin-top: 40px;
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 10px 30px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            transition: 0.2s;
         }
 
-        /* --- БРАУЗЕР --- */
+        .toggle-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* Стиль кнопки, когда защита включена */
+        body.protected-mode .toggle-btn {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 15px #fff;
+        }
+
+
+        /* --- БРАУЗЕР (ВНУТРЕННИЙ) --- */
         .browser-view {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             flex-direction: column;
             transform: translateY(100%);
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.5s ease;
             z-index: 20;
-            background: #111;
+            background: var(--bg);
         }
 
         .browser-view.active { transform: translateY(0); }
 
         .toolbar {
-            height: 60px;
-            background: rgba(0,0,0,0.9);
-            border-bottom: 1px solid var(--border);
+            height: 50px;
+            border-bottom: 2px solid #fff;
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            gap: 15px;
-            z-index: 50;
+            padding: 0 10px;
+            gap: 10px;
+            background: #000;
         }
 
-        .btn-icon {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--neon);
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
-            transition: 0.3s;
-        }
-        .btn-icon:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
-
-        .address-bar {
-            flex-grow: 1;
-            background: rgba(255,255,255,0.05);
-            border: none;
+        .tool-btn {
+            background: #000;
             color: #fff;
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-family: inherit;
-            text-align: center;
+            border: 1px solid #fff;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
         }
+        .tool-btn:hover { background: #fff; color: #000; }
 
-        /* Индикатор загрузки */
-        .loader-line {
-            height: 2px;
-            background: var(--neon);
-            width: 0%;
-            position: absolute;
-            top: 60px; left: 0;
-            transition: width 0.2s;
-            box-shadow: 0 0 10px var(--neon);
-            z-index: 51;
+        .url-display {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 0.8rem;
+            border: 1px solid #333;
+            padding: 5px;
         }
 
         iframe {
             flex-grow: 1;
             border: none;
-            background: #fff;
-            width: 100%;
+            background: #fff; /* Сайты обычно белые */
         }
 
-        /* Адаптив */
-        @media (max-width: 600px) {
-            .logo-big { font-size: 2.5rem; }
-            .toolbar { padding: 0 10px; gap: 8px; }
-            .btn-icon { width: 35px; height: 35px; font-size: 1rem; }
+        .status-msg {
+            margin-top: 10px;
+            font-size: 0.7rem;
+            color: #555;
         }
     </style>
 </head>
@@ -176,120 +174,156 @@
     <canvas id="matrixCanvas"></canvas>
 
     <div class="home-view" id="homeView">
-        <div class="logo-big">FLUX WEB</div>
+        <div class="logo">FLUX</div>
+        
         <div class="search-wrap">
-            <input type="text" class="main-input" id="startInput" placeholder="Введите запрос..." autocomplete="off">
+            <input type="text" class="main-input" id="searchInput" placeholder="Введите запрос..." autocomplete="off" autofocus>
         </div>
-        <div class="status-text">SECURE CONNECTION :: ACTIVE</div>
+
+        <button class="toggle-btn" onclick="toggleProtection()" id="protectBtn">ЗАЩИТА: ВЫКЛ</button>
+        <div class="status-msg" id="statusMsg">РЕЖИМ: YANDEX ПОИСК</div>
     </div>
 
     <div class="browser-view" id="browserView">
         <div class="toolbar">
-            <button class="btn-icon" onclick="goHome()">⌂</button>
-            <button class="btn-icon" onclick="window.history.back()">←</button>
-            <input type="text" class="address-bar" id="urlBar">
-            <button class="btn-icon" onclick="navigate()">Go</button>
+            <button class="tool-btn" onclick="exitProtected()">X</button>
+            <button class="tool-btn" onclick="document.getElementById('viewer').contentWindow.history.back()">&lt;</button>
+            <div class="url-display" id="browserUrl">SECURE PROXY</div>
         </div>
-        <div class="loader-line" id="loader"></div>
         <iframe id="viewer" src=""></iframe>
     </div>
 
     <script>
-        // --- МАТРИЦА (ФОН) ---
+        // --- ПЕРЕМЕННЫЕ ---
+        let isProtected = false;
+        const searchInput = document.getElementById('searchInput');
+        const protectBtn = document.getElementById('protectBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const homeView = document.getElementById('homeView');
+        const browserView = document.getElementById('browserView');
+        const viewer = document.getElementById('viewer');
+
+        // --- ЛОГИКА ЗАЩИТЫ ---
+        function toggleProtection() {
+            isProtected = !isProtected;
+            const body = document.body;
+
+            if (isProtected) {
+                // ВКЛЮЧАЕМ
+                body.classList.add('protected-mode');
+                protectBtn.innerText = "ЗАЩИТА: ВКЛ";
+                statusMsg.innerText = "РЕЖИМ: АНОНИМНЫЙ ПРОКСИ";
+                startMatrix();
+            } else {
+                // ВЫКЛЮЧАЕМ
+                body.classList.remove('protected-mode');
+                protectBtn.innerText = "ЗАЩИТА: ВЫКЛ";
+                statusMsg.innerText = "РЕЖИМ: YANDEX ПОИСК";
+                stopMatrix();
+            }
+            searchInput.focus();
+        }
+
+        // --- ЛОГИКА ПОИСКА ---
+        function handleSearch() {
+            const val = searchInput.value.trim();
+            if (!val) return;
+
+            if (isProtected) {
+                // === 1. ЗАЩИЩЕННЫЙ РЕЖИМ (Внутри сайта) ===
+                
+                let targetUrl;
+                // Проверяем, ссылка это или запрос
+                if ((val.includes('.') && !val.includes(' ')) || val.startsWith('http')) {
+                    targetUrl = val.startsWith('http') ? val : 'https://' + val;
+                } else {
+                    // Используем DuckDuckGo для защиты
+                    targetUrl = `https://duckduckgo.com/?q=${encodeURIComponent(val)}`;
+                }
+
+                // Переключаем экран
+                homeView.classList.add('hidden');
+                browserView.classList.add('active');
+                document.getElementById('browserUrl').innerText = targetUrl;
+                
+                // Загружаем через наш API
+                viewer.src = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
+
+            } else {
+                // === 2. ОБЫЧНЫЙ РЕЖИМ (Переход в Яндекс) ===
+                
+                let yandexLink;
+                if ((val.includes('.') && !val.includes(' ')) || val.startsWith('http')) {
+                    // Если ввели сайт (например vk.com) -> идем прямо на сайт
+                     yandexLink = val.startsWith('http') ? val : 'https://' + val;
+                } else {
+                    // Если ввели запрос -> идем в поиск Яндекса
+                    yandexLink = `https://yandex.ru/search/?text=${encodeURIComponent(val)}`;
+                }
+                
+                // Прямой переход (редирект)
+                window.location.href = yandexLink;
+            }
+        }
+
+        function exitProtected() {
+            homeView.classList.remove('hidden');
+            browserView.classList.remove('active');
+            viewer.src = ''; // Останавливаем загрузку
+            searchInput.value = '';
+            searchInput.focus();
+        }
+
+        // Enter запускает поиск
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+
+        // --- БЕЛАЯ МАТРИЦА ---
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
+        let matrixInterval;
         
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         
-        const chars = "FLUXWEB01XY";
+        const chars = "10"; // Бинарный стиль
         const fontSize = 14;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.ceil(columns)).fill(1);
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.1)'; // След
+            // Черный фон с легкой прозрачностью (след)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00f3ff'; // Неоновый цвет
+            
+            // ЧИСТО БЕЛЫЙ ЦВЕТ
+            ctx.fillStyle = '#ffffff'; 
             ctx.font = fontSize + 'px monospace';
 
             for (let i = 0; i < drops.length; i++) {
                 const text = chars.charAt(Math.floor(Math.random() * chars.length));
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) drops[i] = 0;
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
                 drops[i]++;
             }
         }
-        setInterval(drawMatrix, 50);
+
+        function startMatrix() {
+            if (!matrixInterval) matrixInterval = setInterval(drawMatrix, 50);
+        }
+
+        function stopMatrix() {
+            clearInterval(matrixInterval);
+            matrixInterval = null;
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+        }
+        
         window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-
-
-        // --- БРАУЗЕР ---
-        const home = document.getElementById('homeView');
-        const browser = document.getElementById('browserView');
-        const startInput = document.getElementById('startInput');
-        const urlBar = document.getElementById('urlBar');
-        const viewer = document.getElementById('viewer');
-        const loader = document.getElementById('loader');
-
-        const SHORTCUTS = {
-            'vk': 'vk.com', 'вк': 'vk.com', 
-            'yt': 'youtube.com', 'ютуб': 'youtube.com',
-            'google': 'google.com'
-        };
-
-        function getUrl(val) {
-            val = val.trim().toLowerCase();
-            if (SHORTCUTS[val]) val = SHORTCUTS[val];
-            if ((val.includes('.') && !val.includes(' ')) || val.startsWith('http')) {
-                return val.startsWith('http') ? val : 'https://' + val;
-            }
-            return `https://duckduckgo.com/?q=${encodeURIComponent(val)}`;
-        }
-
-        function load(urlVal) {
-            // Анимация загрузки
-            loader.style.width = '70%';
-            
-            const target = getUrl(urlVal);
-            // Всегда используем прокси!
-            const proxyUrl = `/api/proxy?url=${encodeURIComponent(target)}`;
-            
-            viewer.src = proxyUrl;
-            urlBar.value = target;
-
-            // Завершение загрузки (эмуляция)
-            viewer.onload = () => { loader.style.width = '0%'; };
-        }
-
-        function start() {
-            if(!startInput.value) return;
-            home.classList.add('hidden');
-            browser.classList.add('active');
-            load(startInput.value);
-        }
-
-        function navigate() {
-            load(urlBar.value);
-        }
-
-        function goHome() {
-            home.classList.remove('hidden');
-            browser.classList.remove('active');
-            viewer.src = '';
-            startInput.value = '';
-            loader.style.width = '0%';
-        }
-
-        // Обработка сообщений от iframe (клики по ссылкам внутри прокси)
-        window.addEventListener('message', e => {
-            if(e.data.type === 'navigate') {
-                load(e.data.url);
-            }
-        });
-
-        startInput.addEventListener('keydown', e => { if(e.key === 'Enter') start() });
-        urlBar.addEventListener('keydown', e => { if(e.key === 'Enter') navigate() });
 
     </script>
 </body>
