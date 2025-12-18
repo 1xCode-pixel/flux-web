@@ -7,43 +7,77 @@ module.exports = async (req, res) => {
     return res.status(400).send('URL is required');
   }
 
-  // Если пользователь не ввел протокол, добавляем https
+  // Если протокол не указан, добавляем https
   if (!url.startsWith('http')) {
     url = 'https://' + url;
   }
 
   try {
+    // Делаем запрос к целевому сайту
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        // Притворяемся обычным браузером Chrome на Windows
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
       },
-      responseType: 'arraybuffer' // Важно для картинок и шрифтов
+      responseType: 'arraybuffer', // Важно: скачиваем данные как байты (для картинок)
+      maxRedirects: 5,             // Разрешаем переходы (vk.com -> id.vk.com)
+      validateStatus: () => true   // Не выдавать ошибку, даже если сайт вернул 404
     });
 
-    // Копируем тип контента (html, image, css и т.д.)
-    res.setHeader('Content-Type', response.headers['content-type']);
-    
-    // Пытаемся исправить относительные ссылки (src="/img.png" -> src="site.com/img.png")
-    // Это базовая защита от "ломаной" верстки
-    let data = response.data;
-    const contentType = response.headers['content-type'];
-    
-    if (contentType && contentType.includes('text/html')) {
-        let html = data.toString('utf-8');
-        // Получаем корень сайта для замены ссылок
-        const urlObj = new URL(url);
-        const origin = urlObj.origin;
+    // --- 1. ОПРЕДЕЛЯЕМ ФИНАЛЬНЫЙ URL ---
+    // Это важно: если мы запросили vk.com, а нас перекинуло на m.vk.com,
+    // мы должны искать картинки на m.vk.com
+    const finalUrl = response.request.res.responseUrl || url;
+
+
+    // --- 2. ЧИСТИМ ЗАГОЛОВКИ ЗАЩИТЫ ---
+    // Убираем всё, что запрещает сайту работать в iframe
+    const blockedHeaders = [
+        'content-security-policy',
+        'x-frame-options',
+        'x-content-type-options',
+        'content-encoding', // Axios уже распаковал данные, этот заголовок лишний
+        'transfer-encoding'
+    ];
+
+    // Копируем заголовки от сайта к пользователю, пропуская плохие
+    Object.keys(response.headers).forEach(key => {
+        if (!blockedHeaders.includes(key.toLowerCase())) {
+            res.setHeader(key, response.headers[key]);
+        }
+    });
+
+
+    // --- 3. ОБРАБОТКА КОНТЕНТА ---
+    const contentType = response.headers['content-type'] || '';
+
+    if (contentType.includes('text/html')) {
+        // Если это HTML страница - превращаем байты в текст
+        let html = response.data.toString('utf-8');
+
+        // ВНЕДРЕНИЕ <BASE>: Это чинит картинки и CSS
+        // Мы говорим браузеру: все относительные ссылки (src="/img.png") бери с finalUrl
+        const baseTag = `<base href="${finalUrl}">`;
         
-        // Простая замена относительных ссылок на абсолютные (для href и src)
-        html = html.replace(/src="\//g, `src="${origin}/`);
-        html = html.replace(/href="\//g, `href="${origin}/`);
-        
+        // Вставляем сразу после <head> или в начало, если head нет
+        if (html.includes('<head>')) {
+            html = html.replace('<head>', `<head>${baseTag}`);
+        } else {
+            html = baseTag + html;
+        }
+
+        // Дополнительно: пытаемся превратить ссылки на скрипты в абсолютные
+        // (Решает проблему с подгрузкой некоторых JS модулей)
         res.send(html);
     } else {
-        res.send(data);
+        // Если это картинка, шрифт или скрипт - отдаем как есть (байтами)
+        res.send(response.data);
     }
 
   } catch (error) {
-    res.status(500).send(`Flux Error: ${error.message}`);
+    console.error("Proxy Error:", error.message);
+    res.status(500).send(`Flux Proxy Error: Не удалось открыть сайт. ${error.message}`);
   }
 };
