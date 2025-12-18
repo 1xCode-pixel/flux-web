@@ -6,11 +6,11 @@
     <title>Flux Browser</title>
     <style>
         :root {
-            --bg: #121212;
+            --bg: #050505;
             --fg: #e0e0e0;
             --font: 'Courier New', monospace;
-            --accent-secure: #00ff41; /* Цвет хакеров */
-            --accent-unsafe: #888;    /* Серый цвет */
+            --accent: #fff;
+            --green: #00ff41;
         }
 
         * { box-sizing: border-box; outline: none; }
@@ -22,248 +22,385 @@
             font-family: var(--font);
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            position: relative;
         }
 
-        /* --- ФОНОВАЯ МАТРИЦА --- */
+        /* --- ФОНОВАЯ МАТРИЦА (ЗАЩИТА) --- */
         canvas#matrixCanvas {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            z-index: 0; /* На заднем плане */
+            z-index: 0; /* На самом дне */
             opacity: 0;
-            transition: opacity 1s ease;
+            transition: opacity 1s;
             pointer-events: none;
         }
         
-        /* Видна только когда класс secure-mode активен */
         body.secure-mode canvas#matrixCanvas {
-            opacity: 0.3; /* Полупрозрачная, чтобы читать текст сайта */
+            opacity: 0.25; /* Прозрачность фона */
         }
 
-        /* --- ИНТЕРФЕЙС --- */
+        /* --- 1. СТАРТОВЫЙ ЭКРАН (HOME) --- */
+        .home-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+            background: var(--bg);
+        }
+
+        /* Класс, чтобы убрать стартовый экран */
+        .home-screen.hidden {
+            transform: translateY(-100vh); 
+        }
+
+        h1.logo {
+            font-size: 4rem;
+            letter-spacing: 10px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            cursor: default;
+        }
+
+        .search-container {
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        input.main-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #333;
+            color: #fff;
+            font-size: 1.5rem;
+            padding: 15px;
+            text-align: center;
+            font-family: var(--font);
+            transition: 0.3s;
+        }
+        
+        input.main-input:focus { border-bottom-color: var(--accent); }
+
+        .home-btns {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+
+        /* --- 2. ЭКРАН БРАУЗЕРА (BROWSER) --- */
+        .browser-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100vh); /* Спрятан внизу */
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+            z-index: 20;
+            background: var(--bg);
+        }
+
+        .browser-screen.active {
+            transform: translateY(0);
+        }
+
         .toolbar {
             height: 60px;
             background: #000;
             border-bottom: 1px solid #333;
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            gap: 15px;
-            z-index: 100; /* Поверх матрицы */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            padding: 0 10px;
+            gap: 10px;
+            z-index: 100;
         }
 
-        .logo {
-            font-weight: bold;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            margin-right: 10px;
-        }
+        .mini-logo { font-weight: bold; cursor: pointer; }
 
-        .url-bar-container {
+        .url-bar {
             flex-grow: 1;
-            position: relative;
-        }
-
-        .url-input {
-            width: 100%;
-            background: #1a1a1a;
+            background: #111;
             border: 1px solid #333;
             color: #fff;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 4px;
             font-family: var(--font);
             font-size: 1rem;
-            transition: 0.3s;
         }
-
-        /* Индикация режима в строке поиска */
-        body.secure-mode .url-input {
-            border-color: var(--accent-secure);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
-            color: var(--accent-secure);
+        
+        body.secure-mode .url-bar {
+            border-color: var(--green);
+            color: var(--green);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
         }
 
         button.btn {
             background: transparent;
             border: 1px solid #444;
             color: #aaa;
-            padding: 8px 15px;
+            padding: 6px 12px;
             cursor: pointer;
             font-family: var(--font);
             text-transform: uppercase;
             font-size: 0.8rem;
-            border-radius: 4px;
-            transition: 0.3s;
+            transition: 0.2s;
         }
-
         button.btn:hover { border-color: #fff; color: #fff; }
 
-        /* Кнопка защиты */
-        button#protectBtn {
-            border: 1px solid var(--accent-unsafe);
-            color: var(--accent-unsafe);
-            font-weight: bold;
-            min-width: 140px;
-        }
-
-        body.secure-mode button#protectBtn {
-            border-color: var(--accent-secure);
-            color: var(--accent-secure);
-            background: rgba(0, 255, 65, 0.1);
-            text-shadow: 0 0 5px var(--accent-secure);
-        }
-
-        /* --- ОКНО ПРОСМОТРА --- */
-        .viewport-container {
-            flex-grow: 1;
-            position: relative;
-            z-index: 50;
-            background: #fff; /* Белый фон для сайтов */
+        button.btn-protect { color: #888; border-color: #888; }
+        body.secure-mode button.btn-protect { 
+            color: var(--green); border-color: var(--green); 
+            background: rgba(0,255,65, 0.1); 
         }
 
         iframe#viewer {
-            width: 100%;
-            height: 100%;
+            flex-grow: 1;
             border: none;
+            background: #fff;
         }
 
-        /* Сообщение об ошибке (если сайт не грузится без защиты) */
-        .error-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #111;
-            color: #fff;
+        /* --- 3. ПАНЕЛЬ ИСТОРИИ --- */
+        .history-panel {
+            position: fixed;
+            top: 0; right: -320px; /* Скрыта за экраном */
+            width: 300px;
+            height: 100%;
+            background: #0a0a0a;
+            border-left: 1px solid #333;
+            z-index: 200; /* Поверх всего */
+            transition: right 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            display: none; /* Скрыто по умолчанию */
         }
+
+        .history-panel.open { right: 0; }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .history-list { flex-grow: 1; }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #222;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .history-item:hover { color: #fff; background: #111; }
+        .time-stamp { color: #555; font-size: 0.7rem; margin-bottom: 3px; }
+
     </style>
 </head>
 <body>
 
     <canvas id="matrixCanvas"></canvas>
 
-    <div class="toolbar">
-        <div class="logo">FLUX</div>
-        
-        <button class="btn" onclick="window.history.back()">←</button>
-        
-        <div class="url-bar-container">
-            <input type="text" class="url-input" id="urlInput" placeholder="Введите 'вк' или URL..." autocomplete="off">
+    <div class="home-screen" id="homeScreen">
+        <h1 class="logo">FLUX</h1>
+        <div class="search-container">
+            <input type="text" class="main-input" id="mainInput" placeholder="Введите запрос или 'вк'..." autofocus autocomplete="off">
         </div>
-        
-        <button class="btn" onclick="navigate()">GO</button>
-        <button class="btn" id="protectBtn" onclick="toggleProtection()">ЗАЩИТА: OFF</button>
+        <div class="home-btns">
+            <button class="btn" onclick="startSearch()">Поиск</button>
+            <button class="btn btn-protect" id="homeProtectBtn" onclick="toggleProtection()">Защита: OFF</button>
+        </div>
     </div>
 
-    <div class="viewport-container">
-        <iframe id="viewer" src=""></iframe>
-        
-        <div class="error-overlay" id="errorOverlay">
-            <h2>Сайт не открывается?</h2>
-            <p>Этот сайт блокирует обычный просмотр.</p>
-            <p>Включите <b>ЗАЩИТУ</b>, чтобы использовать прокси-обход.</p>
+    <div class="browser-screen" id="browserScreen">
+        <div class="toolbar">
+            <div class="mini-logo" onclick="goHome()">FLUX</div>
+            <button class="btn" onclick="window.history.back()">←</button>
+            
+            <input type="text" class="url-bar" id="browserInput" autocomplete="off">
+            
+            <button class="btn" onclick="browserSearch()">GO</button>
+            <button class="btn" onclick="toggleHistory()">История</button>
+            <button class="btn btn-protect" id="browserProtectBtn" onclick="toggleProtection()">🛡️</button>
         </div>
+        <iframe id="viewer" src=""></iframe>
+    </div>
+
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h3>ИСТОРИЯ</h3>
+            <button class="btn" onclick="toggleHistory()">X</button>
+        </div>
+        <button class="btn" onclick="clearHistory()" style="width: 100%; margin-bottom: 15px;">Очистить всё</button>
+        <div class="history-list" id="historyList">
+            </div>
     </div>
 
     <script>
         // --- ПЕРЕМЕННЫЕ ---
-        let isSecure = false; // По умолчанию защита выключена (прямое соединение)
-        const viewer = document.getElementById('viewer');
-        const urlInput = document.getElementById('urlInput');
-        const protectBtn = document.getElementById('protectBtn');
-        const errorOverlay = document.getElementById('errorOverlay');
+        let isSecure = false;
+        let historyData = JSON.parse(localStorage.getItem('fluxHistory')) || [];
 
-        // Быстрые ссылки
+        const homeScreen = document.getElementById('homeScreen');
+        const browserScreen = document.getElementById('browserScreen');
+        const mainInput = document.getElementById('mainInput');
+        const browserInput = document.getElementById('browserInput');
+        const viewer = document.getElementById('viewer');
+        const historyPanel = document.getElementById('historyPanel');
+        const historyList = document.getElementById('historyList');
+
+        // Кнопки защиты (их две, на разных экранах)
+        const homeProtectBtn = document.getElementById('homeProtectBtn');
+        const browserProtectBtn = document.getElementById('browserProtectBtn');
+
+        // Шорткаты
         const SHORTCUTS = {
-            'вк': 'vk.com',
-            'vk': 'vk.com',
-            'ютуб': 'youtube.com',
-            'гугл': 'google.com',
-            'яндекс': 'ya.ru'
+            'вк': 'vk.com', 'vk': 'vk.com',
+            'ютуб': 'youtube.com', 'гугл': 'google.com', 'яндекс': 'ya.ru'
         };
 
-        // --- ЛОГИКА ПЕРЕХОДА ---
-        function navigate() {
-            let val = urlInput.value.trim().toLowerCase();
-            if (!val) return;
+        // --- ЛОГИКА ПОИСКА И URL ---
+        
+        function processInput(rawInput) {
+            // 1. ПРИНУДИТЕЛЬНО МАЛЕНЬКИЕ БУКВЫ
+            let val = rawInput.trim().toLowerCase();
+            
+            if(!val) return null;
 
-            // Скрываем ошибку при новой попытке
-            errorOverlay.style.display = 'none';
-
-            // 1. Обработка быстрых команд (вк -> vk.com)
+            // 2. Проверка шорткатов
             if (SHORTCUTS[val]) val = SHORTCUTS[val];
 
-            // 2. Определяем, это URL или поиск
+            // 3. Формирование ссылки
             let targetUrl = '';
             if ((val.includes('.') && !val.includes(' ')) || val.startsWith('http')) {
                 // Это ссылка
                 targetUrl = val.startsWith('http') ? val : `https://${val}`;
             } else {
-                // Это поисковый запрос (всегда используем DuckDuckGo)
+                // Это поиск
                 targetUrl = `https://duckduckgo.com/?q=${encodeURIComponent(val)}`;
             }
-
-            // 3. ГЛАВНАЯ ЛОГИКА ЗАЩИТЫ
-            if (isSecure) {
-                // ЗАЩИТА ВКЛ: Используем наш API прокси
-                console.log("Secure Mode: Proxying via Vercel");
-                viewer.src = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
-            } else {
-                // ЗАЩИТА ВЫКЛ: Прямое подключение (браузер -> сайт)
-                console.log("Unsafe Mode: Direct connection");
-                viewer.src = targetUrl;
-                
-                // Таймер: если через 2 секунды ничего не изменилось, возможно, сайт заблокировал iframe
-                // Это просто визуальная подсказка, реальный статус iframe прочитать нельзя из-за CORS
-                setTimeout(() => {
-                    // Показываем подсказку пользователю
-                    // (Можно убрать, если мешает)
-                }, 2000);
-            }
+            return targetUrl;
         }
 
-        // Обработка Enter
-        urlInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') navigate();
-        });
+        function loadUrl(url) {
+            if (isSecure) {
+                // Через прокси
+                viewer.src = `/api/proxy?url=${encodeURIComponent(url)}`;
+            } else {
+                // Напрямую
+                viewer.src = url;
+            }
+            // Сохраняем в историю
+            addToHistory(url);
+        }
+
+        // Запуск с главного экрана
+        function startSearch() {
+            const url = processInput(mainInput.value);
+            if (!url) return;
+
+            // Переключаем экраны
+            homeScreen.classList.add('hidden');
+            browserScreen.classList.add('active');
+            
+            // Синхронизируем инпуты
+            browserInput.value = url;
+            loadUrl(url);
+        }
+
+        // Запуск из браузера
+        function browserSearch() {
+            const url = processInput(browserInput.value);
+            if (!url) return;
+            loadUrl(url);
+        }
+
+        // Кнопка "Домой"
+        function goHome() {
+            homeScreen.classList.remove('hidden');
+            browserScreen.classList.remove('active');
+            viewer.src = '';
+            mainInput.value = '';
+            mainInput.focus();
+        }
+
+        // Enter работает везде
+        mainInput.addEventListener('keydown', e => { if(e.key === 'Enter') startSearch() });
+        browserInput.addEventListener('keydown', e => { if(e.key === 'Enter') browserSearch() });
 
 
-        // --- ЛОГИКА ЗАЩИТЫ (ВКЛ/ВЫКЛ) ---
+        // --- ЛОГИКА ЗАЩИТЫ ---
         function toggleProtection() {
             isSecure = !isSecure;
+            const body = document.body;
 
             if (isSecure) {
-                // Включаем визуализацию
-                document.body.classList.add('secure-mode');
-                protectBtn.textContent = "ЗАЩИТА: ON";
+                body.classList.add('secure-mode');
+                homeProtectBtn.textContent = "Защита: ON";
                 startMatrix();
-                
-                // Если в строке уже есть сайт, перезагружаем его через защиту
-                if (urlInput.value) navigate();
             } else {
-                // Выключаем
-                document.body.classList.remove('secure-mode');
-                protectBtn.textContent = "ЗАЩИТА: OFF";
+                body.classList.remove('secure-mode');
+                homeProtectBtn.textContent = "Защита: OFF";
                 stopMatrix();
-                
-                // Если сайт открыт, перезагружаем его напрямую (может сломаться, если сайт имеет защиту X-Frame)
-                if (urlInput.value) navigate();
+            }
+
+            // Если сайт уже открыт, перезагружаем его в новом режиме
+            if (browserScreen.classList.contains('active') && browserInput.value) {
+                const url = processInput(browserInput.value);
+                loadUrl(url);
             }
         }
 
+        // --- ЛОГИКА ИСТОРИИ ---
+        function toggleHistory() {
+            historyPanel.classList.toggle('open');
+            renderHistory();
+        }
 
-        // --- МАТРИЦА (АНИМАЦИЯ) ---
+        function addToHistory(url) {
+            const time = new Date().toLocaleTimeString().slice(0, 5); // 14:30
+            // Добавляем в начало
+            historyData.unshift({ url, time });
+            // Храним только 30 записей
+            if (historyData.length > 30) historyData.pop();
+            localStorage.setItem('fluxHistory', JSON.stringify(historyData));
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            historyData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<div class="time-stamp">${item.time}</div>${item.url}`;
+                div.onclick = () => {
+                    browserInput.value = item.url;
+                    browserSearch();
+                    toggleHistory(); // закрыть панель
+                };
+                historyList.appendChild(div);
+            });
+        }
+
+        function clearHistory() {
+            historyData = [];
+            localStorage.removeItem('fluxHistory');
+            renderHistory();
+        }
+
+        // --- МАТРИЦА (ФОН) ---
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         let matrixInterval;
-        const chars = "#%&"; // Твои символы
+        const chars = "#%&"; 
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -272,38 +409,32 @@
         const drops = Array(Math.ceil(columns)).fill(1);
 
         function drawMatrix() {
-            // Очищаем чуть-чуть для следа
-            ctx.fillStyle = 'rgba(18, 18, 18, 0.1)'; // Цвет фона (темный)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = '#ffffff'; // БЕЛЫЙ ЦВЕТ СИМВОЛОВ
+            ctx.fillStyle = '#ffffff'; 
             ctx.font = fontSize + 'px Courier New';
 
             for (let i = 0; i < drops.length; i++) {
                 const text = chars.charAt(Math.floor(Math.random() * chars.length));
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
         }
 
         function startMatrix() {
-            if (matrixInterval) clearInterval(matrixInterval);
+            if (matrixInterval) return;
             matrixInterval = setInterval(drawMatrix, 50);
         }
 
         function stopMatrix() {
             clearInterval(matrixInterval);
+            matrixInterval = null;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-
-        window.onresize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
+        
+        // Ресайз
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
 
     </script>
 </body>
