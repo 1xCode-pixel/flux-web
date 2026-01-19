@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -7,24 +7,35 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Фикс для мобильных браузеров */
-        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { height: 100dvh; }
+        * { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         
+        /* Фикс высоты для мобильных браузеров */
+        body { 
+            height: 100dvh; 
+        }
+        
+        /* Скроллбары */
         .chat-scroll::-webkit-scrollbar { width: 6px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+        
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
         .sidebar-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        
+        /* Стили сообщений */
         .message-content p { margin-bottom: 0.5rem; }
         .message-content p:last-child { margin-bottom: 0; }
         .message-content code { background: #333; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; }
         .message-content pre { background: #1a1a1a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.5rem 0; }
         .message-content pre code { background: transparent; padding: 0; }
+        
         .model-dropdown { transform-origin: top right; }
         
-        /* 2D Isometric Cube */
+        /* Куб (Логотип) */
         .iso-cube { position: relative; width: 24px; height: 24px; }
         .iso-cube::before { content: ''; position: absolute; width: 12px; height: 12px; background: #1a1a1a; transform: rotate(45deg); top: 2px; left: 6px; }
         .iso-cube::after { content: ''; position: absolute; width: 12px; height: 8px; background: #000; top: 10px; left: 6px; clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%); }
@@ -40,7 +51,7 @@
         .iso-cube-sm::after { width: 9px; height: 6px; top: 8px; left: 4.5px; }
         .iso-cube-sm .iso-cube-face { width: 9px; height: 6px; top: 8px; left: 4.5px; }
         
-        /* Thinking animation */
+        /* Анимация думания */
         @keyframes thinking-glow { 0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1); } 50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.2); } }
         @keyframes thinking-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
         @keyframes dot-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-4px); opacity: 1; } }
@@ -50,10 +61,13 @@
         .thinking-container { animation: thinking-glow 2s ease-in-out infinite; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); backdrop-filter: blur(10px); }
         .thinking-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
         .thinking-dot { display: inline-block; width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; margin: 0 2px; animation: dot-bounce 1.4s infinite; }
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
         .thinking-text-enter { animation: fade-in-up 0.3s ease-out; }
         .thinking-icon { animation: thinking-pulse 1.5s ease-in-out infinite; }
         .thinking-done { color: #22c55e !important; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
 
+        /* Безопасная зона снизу для iPhone */
         .safe-pb { padding-bottom: env(safe-area-inset-bottom, 20px); }
     </style>
 </head>
@@ -220,12 +234,22 @@
     </div>
 
     <script>
-        // State
+        // --- Глобальные переменные ---
         let currentChatId = null;
         let chats = {};
-        try { chats = JSON.parse(localStorage.getItem('flux_chats') || '{}'); } catch (e) { chats = {}; }
+        
+        // Загрузка чатов
+        try { 
+            chats = JSON.parse(localStorage.getItem('flux_chats') || '{}'); 
+        } catch (e) { 
+            console.error(e); 
+            chats = {}; 
+        }
+        
         let balance = parseFloat(localStorage.getItem('flux_balance') || '0');
         let usedPromos = JSON.parse(localStorage.getItem('flux_used_promos') || '[]');
+        
+        // Переменные для обработки изображений и сообщений
         let currentImages = []; 
         let currentUserMessage = '';
         let totalTokens = 0;
@@ -233,74 +257,177 @@
         let hasImages = false;
         let thinkingInterval = null;
 
-        let currentModel = { id: 'bytedance-seed/seed-1.6-flash', name: 'Seed 1.6 Flash', icon: 'S', priceInput: 0.10, priceOutput: 0.40, isFree: false, hasVision: true };
+        // Текущая модель
+        let currentModel = { 
+            id: 'bytedance-seed/seed-1.6-flash', 
+            name: 'Seed 1.6 Flash', 
+            icon: 'S', 
+            priceInput: 0.10, 
+            priceOutput: 0.40, 
+            isFree: false, 
+            hasVision: true 
+        };
+
+        // HTML для кубов (иконки)
         const cubeSmall = `<div class="iso-cube iso-cube-sm"><div class="iso-cube-face"></div></div>`;
         const cubeLarge = `<div class="iso-cube iso-cube-lg"><div class="iso-cube-face"></div></div>`;
 
+        // --- Инициализация ---
         document.addEventListener('DOMContentLoaded', () => {
             updateBalanceDisplay();
             renderChatHistory();
             updateModelUI();
+            
+            // Восстановление выбранной модели
             const savedModel = localStorage.getItem('flux_model');
-            if (savedModel) { try { currentModel = JSON.parse(savedModel); updateModelUI(); } catch(e) {} }
-            if (Object.keys(chats).length === 0) createNewChat();
-            else { const keys = Object.keys(chats); if(keys.length > 0) loadChat(keys[0]); else createNewChat(); }
+            if (savedModel) { 
+                try { 
+                    currentModel = JSON.parse(savedModel); 
+                    updateModelUI(); 
+                } catch(e) {} 
+            }
+            
+            // Загрузка последнего чата или создание нового
+            if (Object.keys(chats).length === 0) {
+                createNewChat();
+            } else { 
+                const keys = Object.keys(chats); 
+                if(keys.length > 0) {
+                    loadChat(keys[0]);
+                } else {
+                    createNewChat(); 
+                }
+            }
+            
+            // Закрытие дропдауна при клике вне его
             document.addEventListener('click', (e) => {
-                if (!document.getElementById('modelDropdown').contains(e.target) && !document.getElementById('modelBtn').contains(e.target)) {
-                    document.getElementById('modelDropdown').classList.add('hidden');
+                const dropdown = document.getElementById('modelDropdown');
+                const btn = document.getElementById('modelBtn');
+                if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                    dropdown.classList.add('hidden');
                 }
             });
         });
 
-        function toggleModelDropdown() { document.getElementById('modelDropdown').classList.toggle('hidden'); }
+        // --- Управление UI ---
+        
+        function toggleModelDropdown() { 
+            document.getElementById('modelDropdown').classList.toggle('hidden'); 
+        }
+        
         function selectModel(id, name, icon, priceInput, priceOutput, isFree, hasVision) {
             currentModel = { id, name, icon, priceInput, priceOutput, isFree, hasVision };
             localStorage.setItem('flux_model', JSON.stringify(currentModel));
             updateModelUI();
             document.getElementById('modelDropdown').classList.add('hidden');
         }
+        
         function updateModelUI() {
             document.getElementById('modelName').textContent = currentModel.name;
             document.getElementById('modelIcon').textContent = currentModel.icon;
             const attachLabel = document.getElementById('attachLabel');
-            if (currentModel.hasVision) attachLabel.classList.remove('hidden'); else { attachLabel.classList.add('hidden'); clearImages(); }
-            if (currentModel.isFree) document.getElementById('priceInfo').textContent = 'Бесплатно';
-            else document.getElementById('priceInfo').textContent = `Input: ${currentModel.priceInput}₽ • Output: ${currentModel.priceOutput}₽`;
+            
+            if (currentModel.hasVision) {
+                attachLabel.classList.remove('hidden'); 
+            } else { 
+                attachLabel.classList.add('hidden'); 
+                clearImages(); 
+            }
+            
+            if (currentModel.isFree) {
+                document.getElementById('priceInfo').textContent = 'Бесплатно';
+            } else {
+                document.getElementById('priceInfo').textContent = `Input: ${currentModel.priceInput}₽ • Output: ${currentModel.priceOutput}₽`;
+            }
         }
+        
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         }
-        function updateBalanceDisplay() { document.getElementById('balanceDisplay').textContent = balance.toFixed(4) + ' ₽'; }
-        function openPromoModal() { document.getElementById('promoModal').classList.remove('hidden'); document.getElementById('promoModal').classList.add('flex'); }
-        function closePromoModal() { document.getElementById('promoModal').classList.add('hidden'); document.getElementById('promoModal').classList.remove('flex'); }
+        
+        function updateBalanceDisplay() { 
+            document.getElementById('balanceDisplay').textContent = balance.toFixed(4) + ' ₽'; 
+        }
+        
+        function openPromoModal() { 
+            document.getElementById('promoModal').classList.remove('hidden'); 
+            document.getElementById('promoModal').classList.add('flex'); 
+        }
+        
+        function closePromoModal() { 
+            document.getElementById('promoModal').classList.add('hidden'); 
+            document.getElementById('promoModal').classList.remove('flex'); 
+        }
 
+        // --- Логика Промокодов ---
+        
         async function activatePromo() {
             const code = document.getElementById('promoInput').value.trim().toUpperCase();
             const errorEl = document.getElementById('promoError');
             const successEl = document.getElementById('promoSuccess');
             const btn = document.getElementById('promoBtn');
-            errorEl.classList.add('hidden'); successEl.classList.add('hidden');
+            
+            errorEl.classList.add('hidden'); 
+            successEl.classList.add('hidden');
+            
             if (!code) return;
-            if (usedPromos.includes(code)) { errorEl.textContent = 'Использован'; errorEl.classList.remove('hidden'); return; }
+            
+            if (usedPromos.includes(code)) { 
+                errorEl.textContent = 'Использован'; 
+                errorEl.classList.remove('hidden'); 
+                return; 
+            }
+            
             btn.disabled = true;
             try {
-                const response = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+                const response = await fetch('/api/promo', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ code }) 
+                });
                 const data = await response.json();
+                
                 if (data.success) {
-                    balance += data.amount; localStorage.setItem('flux_balance', balance.toString()); usedPromos.push(code); localStorage.setItem('flux_used_promos', JSON.stringify(usedPromos)); updateBalanceDisplay(); successEl.textContent = `+${data.amount} ₽`; successEl.classList.remove('hidden'); setTimeout(() => { closePromoModal(); addSystemMessage(`🎁 Промокод активирован! +${data.amount} ₽`); }, 1500);
-                } else { errorEl.textContent = data.error; errorEl.classList.remove('hidden'); }
-            } catch (e) { errorEl.textContent = 'Ошибка сети'; errorEl.classList.remove('hidden'); }
+                    balance += data.amount; 
+                    localStorage.setItem('flux_balance', balance.toString()); 
+                    usedPromos.push(code); 
+                    localStorage.setItem('flux_used_promos', JSON.stringify(usedPromos)); 
+                    updateBalanceDisplay(); 
+                    
+                    successEl.textContent = `+${data.amount} ₽`; 
+                    successEl.classList.remove('hidden'); 
+                    
+                    setTimeout(() => { 
+                        closePromoModal(); 
+                        addSystemMessage(`🎁 Промокод активирован! +${data.amount} ₽`); 
+                    }, 1500);
+                } else { 
+                    errorEl.textContent = data.error; 
+                    errorEl.classList.remove('hidden'); 
+                }
+            } catch (e) { 
+                errorEl.textContent = 'Ошибка сети'; 
+                errorEl.classList.remove('hidden'); 
+            }
             btn.disabled = false;
         }
+
+        // --- Управление Чатами ---
 
         function createNewChat() {
             const id = 'chat_' + Date.now();
             chats[id] = { id, title: 'Новый чат', messages: [], createdAt: Date.now() };
-            saveChats(); loadChat(id); renderChatHistory();
-            if (window.innerWidth < 1024) { const sidebar = document.getElementById('sidebar'); if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar(); }
+            saveChats(); 
+            loadChat(id); 
+            renderChatHistory();
+            
+            if (window.innerWidth < 1024) { 
+                const sidebar = document.getElementById('sidebar'); 
+                if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar(); 
+            }
         }
 
         function loadChat(chatId) {
@@ -309,8 +436,15 @@
             const chat = chats[chatId];
             document.getElementById('chatTitle').textContent = chat.title || 'Новый чат';
             const container = document.getElementById('messagesContainer');
+            
             if (!chat.messages || chat.messages.length === 0) {
-                container.innerHTML = `<div class="text-center py-12"><div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">${cubeLarge}</div><h2 class="text-2xl font-bold mb-2">Добро пожаловать в Flux AI</h2></div>`;
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                            ${cubeLarge}
+                        </div>
+                        <h2 class="text-2xl font-bold mb-2">Добро пожаловать в Flux AI</h2>
+                    </div>`;
             } else {
                 container.innerHTML = '';
                 chat.messages.forEach(msg => {
@@ -319,38 +453,57 @@
                     appendMessage(msg.role, msg.content, displayImg, false);
                 });
             }
-            renderChatHistory(); scrollToBottom();
+            renderChatHistory(); 
+            scrollToBottom();
         }
 
         function deleteChat(chatId, event) {
             event.stopPropagation();
             if (confirm('Удалить?')) {
-                delete chats[chatId]; saveChats(); renderChatHistory();
-                if (currentChatId === chatId) { const keys = Object.keys(chats); if (keys.length > 0) loadChat(keys[0]); else createNewChat(); }
+                delete chats[chatId]; 
+                saveChats(); 
+                renderChatHistory();
+                
+                if (currentChatId === chatId) { 
+                    const keys = Object.keys(chats); 
+                    if (keys.length > 0) loadChat(keys[0]); 
+                    else createNewChat(); 
+                }
             }
         }
 
         function saveChats() {
             const chatsToSave = JSON.parse(JSON.stringify(chats));
+            // Очищаем картинки для сохранения в LocalStorage (чтобы не забить память)
             Object.values(chatsToSave).forEach(chat => {
                 if (chat.messages) {
                     chat.messages.forEach(msg => {
-                        if (msg.image) { msg.image = null; msg.content = msg.content + '\n[Картинка не сохранена]'; }
+                        if (msg.image) { 
+                            msg.image = null; 
+                            msg.content = msg.content + '\n[Картинка не сохранена]'; 
+                        }
                     });
                 }
             });
-            try { localStorage.setItem('flux_chats', JSON.stringify(chatsToSave)); } catch (e) { addSystemMessage('⚠️ Память переполнена'); }
+            try { 
+                localStorage.setItem('flux_chats', JSON.stringify(chatsToSave)); 
+            } catch (e) { 
+                addSystemMessage('⚠️ Память переполнена'); 
+            }
         }
 
         function renderChatHistory() {
             const container = document.getElementById('chatHistory');
             const sortedChats = Object.values(chats).sort((a, b) => b.createdAt - a.createdAt);
+            
             container.innerHTML = sortedChats.map(chat => `
                 <div onclick="loadChat('${chat.id}')" class="group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition ${chat.id === currentChatId ? 'bg-neutral-800' : 'hover:bg-neutral-800/50'}">
                     <span class="flex-1 truncate text-sm">${escapeHtml(chat.title || 'Новый чат')}</span>
                     <button onclick="deleteChat('${chat.id}', event)" class="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-700 rounded transition">×</button>
                 </div>`).join('');
         }
+
+        // --- Сообщения ---
 
         function appendMessage(role, content, image = null, save = true) {
             const container = document.getElementById('messagesContainer');
@@ -359,17 +512,28 @@
             
             const div = document.createElement('div');
             div.className = 'flex gap-4 ' + (role === 'user' ? 'justify-end' : '');
+            
             if (role === 'user') {
                 div.innerHTML = `
                     <div class="max-w-2xl">
                         ${image ? `<img src="${image}" class="max-h-60 rounded-xl mb-2 ml-auto border border-neutral-700">` : ''}
-                        <div class="bg-neutral-800 rounded-2xl px-4 py-3"><p class="text-white whitespace-pre-wrap">${escapeHtml(content)}</p></div>
+                        <div class="bg-neutral-800 rounded-2xl px-4 py-3">
+                            <p class="text-white whitespace-pre-wrap">${escapeHtml(content)}</p>
+                        </div>
                     </div>
-                    <div class="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`;
+                    <div class="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>`;
             } else {
-                div.innerHTML = `<div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div><div class="max-w-2xl message-content"><div class="text-neutral-200 whitespace-pre-wrap">${formatMessage(content)}</div></div>`;
+                div.innerHTML = `
+                    <div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div>
+                    <div class="max-w-2xl message-content">
+                        <div class="text-neutral-200 whitespace-pre-wrap">${formatMessage(content)}</div>
+                    </div>`;
             }
+            
             container.appendChild(div);
+            
             if (save && currentChatId) {
                 chats[currentChatId].messages.push({ role, content, image });
                 if (role === 'user' && chats[currentChatId].messages.filter(m => m.role === 'user').length === 1) {
@@ -391,33 +555,73 @@
             scrollToBottom();
         }
 
+        // --- Индикация "Думает" ---
+
         function showThinking(withImage = false, userMessage = '') {
             const container = document.getElementById('messagesContainer');
             currentUserMessage = userMessage;
             const div = document.createElement('div');
             div.id = 'thinkingIndicator';
             div.className = 'flex gap-4';
-            div.innerHTML = `<div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div><div class="flex-1 max-w-2xl"><div class="thinking-container rounded-2xl px-4 py-3 relative overflow-hidden"><div class="thinking-shimmer absolute inset-0"></div><div class="relative flex items-center gap-3"><span id="thinkingIcon" class="thinking-icon text-lg">${withImage ? '👁️' : '📖'}</span><span id="thinkingText" class="thinking-text-enter text-blue-400 font-medium">${withImage ? 'Сжимаю и отправляю фото...' : 'Читаю запрос'}</span></div></div></div>`;
+            
+            div.innerHTML = `
+                <div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div>
+                <div class="flex-1 max-w-2xl">
+                    <div class="thinking-container rounded-2xl px-4 py-3 relative overflow-hidden">
+                        <div class="thinking-shimmer absolute inset-0"></div>
+                        <div class="relative flex items-center gap-3">
+                            <span id="thinkingIcon" class="thinking-icon text-lg">${withImage ? '👁️' : '📖'}</span>
+                            <span id="thinkingText" class="thinking-text-enter text-blue-400 font-medium">${withImage ? 'Сжимаю и отправляю фото...' : 'Читаю запрос'}</span>
+                        </div>
+                    </div>
+                </div>`;
             container.appendChild(div);
             scrollToBottom();
         }
 
-        function hideThinking() { document.getElementById('thinkingIndicator')?.remove(); }
-        function formatMessage(text) { return escapeHtml(text).replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
-        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        function scrollToBottom() { const container = document.getElementById('chatContainer'); container.scrollTop = container.scrollHeight; }
+        function hideThinking() { 
+            document.getElementById('thinkingIndicator')?.remove(); 
+        }
+        
+        // --- Форматирование текста ---
 
-        // --- IMAGE COMPRESSION AND HANDLING ---
+        function formatMessage(text) { 
+            return escapeHtml(text)
+                .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>'); 
+        }
+        
+        function escapeHtml(text) { 
+            if (!text) return ''; 
+            const div = document.createElement('div'); 
+            div.textContent = text; 
+            return div.innerHTML; 
+        }
+        
+        function scrollToBottom() { 
+            const container = document.getElementById('chatContainer'); 
+            container.scrollTop = container.scrollHeight; 
+        }
+
+        // --- Обработка изображений (Сжатие) ---
+
         function handleImages(event) {
             const files = Array.from(event.target.files);
             const remainingSlots = 10 - currentImages.length;
             const filesToProcess = files.slice(0, remainingSlots);
-            if (files.length > remainingSlots) addSystemMessage(`⚠️ Максимум 10 фото. Загружено ${remainingSlots}.`);
+            
+            if (files.length > remainingSlots) {
+                addSystemMessage(`⚠️ Максимум 10 фото. Загружено ${remainingSlots}.`);
+            }
+            
             if (filesToProcess.length === 0) return;
 
             document.getElementById('imagePreviewBox').classList.remove('hidden');
+            
             filesToProcess.forEach(file => {
-                // Compress image
+                // ВАЖНО: Сжатие перед добавлением, чтобы не превысить лимит Vercel
                 compressImage(file, 800, 0.7).then(base64 => {
                     currentImages.push(base64);
                     refreshPreviewGrid();
@@ -425,7 +629,7 @@
             });
         }
 
-        // Функция сжатия изображений
+        // Функция сжатия
         function compressImage(file, maxWidth, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -455,25 +659,50 @@
             });
         }
 
-        function removeImage(index) { currentImages.splice(index, 1); refreshPreviewGrid(); }
+        function removeImage(index) { 
+            currentImages.splice(index, 1); 
+            refreshPreviewGrid(); 
+        }
+        
         function refreshPreviewGrid() {
             const previewGrid = document.getElementById('previewGrid');
             previewGrid.innerHTML = '';
-            if (currentImages.length === 0) { clearImages(); return; }
+            if (currentImages.length === 0) { 
+                clearImages(); 
+                return; 
+            }
             currentImages.forEach((img, idx) => {
                 const div = document.createElement('div');
                 div.className = 'relative w-16 h-16 group flex-shrink-0';
-                div.innerHTML = `<img src="${img}" class="w-full h-full object-cover rounded-lg border border-neutral-700"><button onclick="removeImage(${idx})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>`;
+                div.innerHTML = `
+                    <img src="${img}" class="w-full h-full object-cover rounded-lg border border-neutral-700">
+                    <button onclick="removeImage(${idx})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>`;
                 previewGrid.appendChild(div);
             });
         }
-        function clearImages() { currentImages = []; document.getElementById('imageInput').value = ''; document.getElementById('previewGrid').innerHTML = ''; document.getElementById('imagePreviewBox').classList.add('hidden'); }
+        
+        function clearImages() { 
+            currentImages = []; 
+            document.getElementById('imageInput').value = ''; 
+            document.getElementById('previewGrid').innerHTML = ''; 
+            document.getElementById('imagePreviewBox').classList.add('hidden'); 
+        }
+
+        // --- Отправка сообщения ---
 
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
+            
             if ((!message && currentImages.length === 0) || isGenerating) return;
-            if (!currentModel.isFree && balance <= 0) { addSystemMessage('⚠️ Нет средств'); openPromoModal(); return; }
+            
+            if (!currentModel.isFree && balance <= 0) { 
+                addSystemMessage('⚠️ Нет средств'); 
+                openPromoModal(); 
+                return; 
+            }
 
             isGenerating = true;
             hasImages = currentImages.length > 0;
@@ -498,11 +727,16 @@
 
             const sentImages = [...currentImages]; 
             const sentText = message;
-            input.value = ''; input.style.height = 'auto'; clearImages();
+            
+            input.value = ''; 
+            input.style.height = 'auto'; 
+            clearImages();
+            
             showThinking(hasImages, sentText);
 
             try {
-                // Remove images from history sent to API to save bandwidth
+                // Ограничиваем историю для отправки на сервер, чтобы сэкономить трафик
+                // и не отправляем старые картинки в историю API
                 const history = chats[currentChatId].messages.slice(-6).map(m => {
                     return { role: m.role, content: m.content };
                 });
@@ -532,10 +766,17 @@
                 const reply = data.choices[0].message.content;
                 appendMessage('assistant', reply);
                 
+                // --- Списание средств ---
                 if (!currentModel.isFree) {
                     const inputWords = sentText.trim().split(/\s+/).length;
                     const outputWords = reply.trim().split(/\s+/).length;
-                    const totalCost = (((inputWords * 3 + sentImages.length * 1500) / 1000000) * currentModel.priceInput) + (((outputWords * 3) / 1000000) * currentModel.priceOutput);
+                    
+                    // Расчет: (слова * 3 + картинки * 1500)
+                    const myInputTokens = (inputWords * 3) + (sentImages.length * 1500);
+                    const myOutputTokens = (outputWords * 3);
+                    
+                    const totalCost = ((myInputTokens / 1000000) * currentModel.priceInput) + ((myOutputTokens / 1000000) * currentModel.priceOutput);
+                    
                     balance = Math.max(0, balance - totalCost);
                     localStorage.setItem('flux_balance', balance.toString());
                     updateBalanceDisplay();
@@ -544,14 +785,31 @@
                 hideThinking();
                 addSystemMessage('❌ ' + error.message);
             } finally {
-                isGenerating = false; hasImages = false; document.getElementById('sendBtn').disabled = false;
+                isGenerating = false; 
+                hasImages = false; 
+                document.getElementById('sendBtn').disabled = false;
             }
         }
 
-        function handleKeyDown(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }
-        function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
-        document.getElementById('promoModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closePromoModal(); });
-        document.getElementById('promoInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') activatePromo(); });
+        function handleKeyDown(event) { 
+            if (event.key === 'Enter' && !event.shiftKey) { 
+                event.preventDefault(); 
+                sendMessage(); 
+            } 
+        }
+        
+        function autoResize(el) { 
+            el.style.height = 'auto'; 
+            el.style.height = Math.min(el.scrollHeight, 160) + 'px'; 
+        }
+        
+        document.getElementById('promoModal').addEventListener('click', (e) => { 
+            if (e.target === e.currentTarget) closePromoModal(); 
+        });
+        
+        document.getElementById('promoInput').addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter') activatePromo(); 
+        });
     </script>
 </body>
-            </html>
+    </html>
