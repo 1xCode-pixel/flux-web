@@ -9,9 +9,13 @@
     <style>
         * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* ФИКС ДЛЯ МОБИЛЬНЫХ: Фиксируем высоту экрана */
-        body { height: 100dvh; overflow: hidden; }
-
+        /* ВАЖНО: Фикс высоты для мобильных браузеров */
+        body { 
+            height: 100dvh; 
+            overflow: hidden; /* Запрещаем скролл самого body */
+        }
+        
+        /* Стили скроллбаров */
         .chat-scroll::-webkit-scrollbar { width: 6px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
@@ -26,7 +30,7 @@
         .message-content pre code { background: transparent; padding: 0; }
         .model-dropdown { transform-origin: top right; }
         
-        /* Кубик (Лого) - Без изменений */
+        /* Куб (Логотип) - Оригинальный код */
         .iso-cube { position: relative; width: 24px; height: 24px; }
         .iso-cube::before { content: ''; position: absolute; width: 12px; height: 12px; background: #1a1a1a; transform: rotate(45deg); top: 2px; left: 6px; }
         .iso-cube::after { content: ''; position: absolute; width: 12px; height: 8px; background: #000; top: 10px; left: 6px; clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%); }
@@ -42,7 +46,7 @@
         .iso-cube-sm::after { width: 9px; height: 6px; top: 8px; left: 4.5px; }
         .iso-cube-sm .iso-cube-face { width: 9px; height: 6px; top: 8px; left: 4.5px; }
         
-        /* Анимации - Без изменений */
+        /* Анимации - Оригинальный код */
         @keyframes thinking-glow { 0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1); } 50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.2); } }
         @keyframes thinking-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
         @keyframes dot-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-4px); opacity: 1; } }
@@ -58,7 +62,7 @@
         .thinking-icon { animation: thinking-pulse 1.5s ease-in-out infinite; }
         .thinking-done { color: #22c55e !important; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
 
-        /* Безопасный отступ снизу для iPhone */
+        /* ВАЖНО: Безопасный отступ снизу для iPhone/Android */
         .safe-pb { padding-bottom: env(safe-area-inset-bottom, 20px); }
     </style>
 </head>
@@ -106,7 +110,7 @@
                 <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-neutral-800 rounded-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <h2 id="chatTitle" class="font-medium text-neutral-300">Новый чат</h2>
+                <h2 id="chatTitle" class="font-medium text-neutral-300 truncate max-w-[150px] sm:max-w-xs">Новый чат</h2>
             </div>
             
             <div class="relative">
@@ -225,14 +229,14 @@
     </div>
 
     <script>
-        // State
+        // --- Глобальные переменные ---
         let currentChatId = null;
         let chats = {};
         try { chats = JSON.parse(localStorage.getItem('flux_chats') || '{}'); } catch (e) { chats = {}; }
         let balance = parseFloat(localStorage.getItem('flux_balance') || '0');
         let usedPromos = JSON.parse(localStorage.getItem('flux_used_promos') || '[]');
         
-        // Массив для нескольких фото
+        // Массив для нескольких фото (новое!)
         let currentImages = []; 
         let currentUserMessage = '';
         let totalTokens = 0;
@@ -244,6 +248,7 @@
         const cubeSmall = `<div class="iso-cube iso-cube-sm"><div class="iso-cube-face"></div></div>`;
         const cubeLarge = `<div class="iso-cube iso-cube-lg"><div class="iso-cube-face"></div></div>`;
 
+        // --- Инициализация ---
         document.addEventListener('DOMContentLoaded', () => {
             updateBalanceDisplay();
             renderChatHistory();
@@ -259,13 +264,16 @@
             });
         });
 
+        // --- UI Функции ---
         function toggleModelDropdown() { document.getElementById('modelDropdown').classList.toggle('hidden'); }
+        
         function selectModel(id, name, icon, priceInput, priceOutput, isFree, hasVision) {
             currentModel = { id, name, icon, priceInput, priceOutput, isFree, hasVision };
             localStorage.setItem('flux_model', JSON.stringify(currentModel));
             updateModelUI();
             document.getElementById('modelDropdown').classList.add('hidden');
         }
+        
         function updateModelUI() {
             document.getElementById('modelName').textContent = currentModel.name;
             document.getElementById('modelIcon').textContent = currentModel.icon;
@@ -274,13 +282,15 @@
             if (currentModel.isFree) document.getElementById('priceInfo').textContent = 'Бесплатно';
             else document.getElementById('priceInfo').textContent = `Input: ${currentModel.priceInput}₽ • Output: ${currentModel.priceOutput}₽`;
         }
+        
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         }
-        // БАЛАНС: 4 знака
+        
+        // БАЛАНС: Показываем 4 знака (исправлено)
         function updateBalanceDisplay() { document.getElementById('balanceDisplay').textContent = balance.toFixed(4) + ' ₽'; }
         
         function openPromoModal() { document.getElementById('promoModal').classList.remove('hidden'); document.getElementById('promoModal').classList.add('flex'); }
@@ -305,6 +315,7 @@
             btn.disabled = false;
         }
 
+        // --- Управление Чатами ---
         function createNewChat() {
             const id = 'chat_' + Date.now();
             chats[id] = { id, title: 'Новый чат', messages: [], createdAt: Date.now() };
@@ -323,6 +334,7 @@
             } else {
                 container.innerHTML = '';
                 chat.messages.forEach(msg => {
+                    // Поддержка старого и нового формата (массив картинок)
                     let displayImg = null;
                     if (msg.image) displayImg = Array.isArray(msg.image) ? msg.image[0] : msg.image;
                     appendMessage(msg.role, msg.content, displayImg, false);
@@ -344,7 +356,8 @@
             Object.values(chatsToSave).forEach(chat => {
                 if (chat.messages) {
                     chat.messages.forEach(msg => {
-                        if (msg.image) { msg.image = null; msg.content = msg.content + '\n[Картинка не сохранена]'; }
+                        // Очищаем картинки, чтобы не забить память телефона
+                        if (msg.image) { msg.image = null; msg.content = msg.content + '\n[Картинка не сохранена в истории]'; }
                     });
                 }
             });
@@ -361,6 +374,7 @@
                 </div>`).join('');
         }
 
+        // --- Сообщения ---
         function appendMessage(role, content, image = null, save = true) {
             const container = document.getElementById('messagesContainer');
             const welcome = container.querySelector('.text-center.py-12');
@@ -406,7 +420,7 @@
             const div = document.createElement('div');
             div.id = 'thinkingIndicator';
             div.className = 'flex gap-4';
-            div.innerHTML = `<div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div><div class="flex-1 max-w-2xl"><div class="thinking-container rounded-2xl px-4 py-3 relative overflow-hidden"><div class="thinking-shimmer absolute inset-0"></div><div class="relative flex items-center gap-3"><span id="thinkingIcon" class="thinking-icon text-lg">${withImage ? '👁️' : '📖'}</span><span id="thinkingText" class="thinking-text-enter text-blue-400 font-medium">${withImage ? 'Обработка (сжатие фото)...' : 'Читаю запрос'}</span></div></div></div>`;
+            div.innerHTML = `<div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div><div class="flex-1 max-w-2xl"><div class="thinking-container rounded-2xl px-4 py-3 relative overflow-hidden"><div class="thinking-shimmer absolute inset-0"></div><div class="relative flex items-center gap-3"><span id="thinkingIcon" class="thinking-icon text-lg">${withImage ? '👁️' : '📖'}</span><span id="thinkingText" class="thinking-text-enter text-blue-400 font-medium">${withImage ? 'Сжимаю и отправляю фото...' : 'Читаю запрос'}</span></div></div></div>`;
             container.appendChild(div);
             scrollToBottom();
         }
@@ -416,7 +430,7 @@
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         function scrollToBottom() { const container = document.getElementById('chatContainer'); container.scrollTop = container.scrollHeight; }
 
-        // --- ОБРАБОТКА НЕСКОЛЬКИХ ФОТО И СЖАТИЕ ---
+        // --- ВАЖНО: ОБРАБОТКА НЕСКОЛЬКИХ ФОТО И СЖАТИЕ ---
         function handleImages(event) {
             const files = Array.from(event.target.files);
             const remainingSlots = 10 - currentImages.length;
@@ -427,7 +441,7 @@
 
             document.getElementById('imagePreviewBox').classList.remove('hidden');
             filesToProcess.forEach(file => {
-                // СЖАТИЕ: Обязательно, чтобы не было ошибки Request Entity Too Large
+                // СЖАТИЕ ФОТО: Обязательно, чтобы не было ошибки сервера
                 compressImage(file, 800, 0.7).then(base64 => {
                     currentImages.push(base64);
                     refreshPreviewGrid();
@@ -435,7 +449,7 @@
             });
         }
 
-        // Функция сжатия (добавлена, чтобы работало 10 фото)
+        // Функция сжатия (чтобы работало 10 фото и не вылетала ошибка)
         function compressImage(file, maxWidth, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -504,7 +518,7 @@
             showThinking(hasImages, sentText);
 
             try {
-                // Отправляем историю без тяжелых картинок
+                // Отправляем историю без тяжелых картинок, чтобы экономить трафик
                 const history = chats[currentChatId].messages.slice(-6).map(m => ({ role: m.role, content: m.content }));
                 
                 const response = await fetch('/api/chat', {
@@ -526,8 +540,8 @@
                     appendMessage('assistant', reply);
                     
                     if (!currentModel.isFree && data.usage) {
-                        // Расчет с учетом всех фото
-                        let imageTokens = hasImages ? (sentImages.length * 1250) : 0;
+                        // Расчет списания: 1500 токенов за каждое фото (как ты и просил)
+                        let imageTokens = hasImages ? (sentImages.length * 1500) : 0;
                         const inputCost = ((data.usage.prompt_tokens + imageTokens) / 1000000) * currentModel.priceInput;
                         const outputCost = (data.usage.completion_tokens / 1000000) * currentModel.priceOutput;
                         const totalCost = inputCost + outputCost;
