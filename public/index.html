@@ -170,9 +170,7 @@
 </head>
 <body class="bg-neutral-900 text-white h-screen flex overflow-hidden">
     
-    <!-- Sidebar -->
     <aside id="sidebar" class="w-72 bg-black flex flex-col h-full border-r border-neutral-800 flex-shrink-0 transition-all duration-300 lg:relative absolute z-40 -translate-x-full lg:translate-x-0">
-        <!-- Logo & New Chat -->
         <div class="p-4 border-b border-neutral-800">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden">
@@ -193,7 +191,6 @@
             </button>
         </div>
 
-        <!-- Balance -->
         <div class="p-4 border-b border-neutral-800">
             <div class="bg-neutral-900 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-2">
@@ -207,7 +204,6 @@
             </div>
         </div>
 
-        <!-- Chat History -->
         <div class="flex-1 overflow-y-auto sidebar-scroll p-4">
             <h3 class="text-xs font-semibold text-neutral-500 uppercase mb-3">История чатов</h3>
             <div id="chatHistory" class="space-y-1">
@@ -215,12 +211,9 @@
         </div>
     </aside>
 
-    <!-- Mobile Sidebar Overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 lg:hidden hidden" onclick="toggleSidebar()"></div>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full">
-        <!-- Header -->
         <header class="h-14 border-b border-neutral-800 flex items-center justify-between px-4 flex-shrink-0">
             <div class="flex items-center gap-3">
                 <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-neutral-800 rounded-lg">
@@ -231,7 +224,6 @@
                 <h2 id="chatTitle" class="font-medium text-neutral-300">Новый чат</h2>
             </div>
             
-            <!-- Model Selector -->
             <div class="relative">
                 <button onclick="toggleModelDropdown()" id="modelBtn" class="flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-xl transition">
                     <div class="w-6 h-6 bg-white rounded-lg flex items-center justify-center">
@@ -243,13 +235,11 @@
                     </svg>
                 </button>
                 
-                <!-- Dropdown -->
                 <div id="modelDropdown" class="model-dropdown absolute right-0 top-full mt-2 w-80 bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl hidden z-50 overflow-hidden">
                     <div class="p-3 border-b border-neutral-800">
                         <h3 class="font-semibold text-sm">Выберите модель</h3>
                     </div>
                     <div class="p-2 max-h-96 overflow-y-auto">
-                        <!-- Free Models -->
                         <div class="px-2 py-1">
                             <span class="text-xs font-semibold text-green-500 uppercase">Бесплатные</span>
                         </div>
@@ -282,7 +272,6 @@
                             </div>
                         </button>
 
-                        <!-- Paid Models -->
                         <div class="px-2 py-1 mt-2">
                             <span class="text-xs font-semibold text-neutral-400 uppercase">Платные</span>
                         </div>
@@ -313,7 +302,6 @@
                         </button>
                     </div>
                     
-                    <!-- Current model info -->
                     <div class="p-3 border-t border-neutral-800 bg-neutral-800/50">
                         <div class="flex items-center justify-between text-xs">
                             <span class="text-neutral-400">Текущие цены (за 1M токенов)</span>
@@ -326,10 +314,8 @@
             </div>
         </header>
 
-        <!-- Chat Messages -->
         <div id="chatContainer" class="flex-1 overflow-y-auto chat-scroll">
             <div class="max-w-3xl mx-auto p-4 space-y-6" id="messagesContainer">
-                <!-- Welcome -->
                 <div class="text-center py-12">
                     <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
                         <div class="iso-cube iso-cube-lg">
@@ -340,7 +326,6 @@
                     <p class="text-neutral-400 max-w-md mx-auto">Задайте вопрос, загрузите изображение или начните диалог с искусственным интеллектом</p>
                 </div>
 
-                <!-- Capabilities -->
                 <div class="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                     <div class="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4">
                         <div class="text-lg mb-2">💬</div>
@@ -361,35 +346,24 @@
             </div>
         </div>
 
-        <!-- Input Area -->
         <div class="border-t border-neutral-800 p-4 flex-shrink-0">
             <div class="max-w-3xl mx-auto">
-                <!-- Image Preview -->
                 <div id="imagePreviewBox" class="hidden mb-3">
-                    <div class="inline-flex items-center gap-2 bg-neutral-800 rounded-lg p-2 pr-3">
-                        <img id="previewImg" class="h-16 w-16 object-cover rounded">
-                        <div class="flex-1">
-                            <p class="text-sm text-neutral-300">Изображение прикреплено</p>
-                            <p id="imageName" class="text-xs text-neutral-500">image.jpg</p>
+                    <div id="previewGrid" class="flex flex-wrap gap-2">
                         </div>
-                        <button onclick="clearImage()" class="p-1 hover:bg-neutral-700 rounded">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
+                    <div class="mt-2 text-right">
+                        <button onclick="clearImages()" class="text-xs text-red-400 hover:text-red-300">Удалить все</button>
                     </div>
                 </div>
 
                 <div class="flex gap-3 items-end">
-                    <!-- Attach Image -->
                     <label id="attachLabel" class="p-3 hover:bg-neutral-800 rounded-xl cursor-pointer transition flex-shrink-0">
-                        <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImage(event)">
+                        <input type="file" id="imageInput" accept="image/*" multiple class="hidden" onchange="handleImages(event)">
                         <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                         </svg>
                     </label>
 
-                    <!-- Text Input -->
                     <div class="flex-1 relative">
                         <textarea 
                             id="messageInput"
@@ -401,7 +375,6 @@
                         ></textarea>
                     </div>
 
-                    <!-- Send Button -->
                     <button id="sendBtn" onclick="sendMessage()" class="p-3 bg-white hover:bg-neutral-200 text-black rounded-xl transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
@@ -416,7 +389,6 @@
         </div>
     </main>
 
-    <!-- Promo Code Modal -->
     <div id="promoModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
         <div class="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-sm w-full p-6">
             <div class="flex items-center justify-between mb-6">
@@ -462,11 +434,13 @@
         let chats = JSON.parse(localStorage.getItem('flux_chats') || '{}');
         let balance = parseFloat(localStorage.getItem('flux_balance') || '0');
         let usedPromos = JSON.parse(localStorage.getItem('flux_used_promos') || '[]');
-        let currentImage = null;
+        
+        // --- NEW STATE FOR MULTIPLE IMAGES ---
+        let currentImages = []; 
         let currentUserMessage = '';
         let totalTokens = 0;
         let isGenerating = false;
-        let hasImage = false;
+        let hasImages = false;
         let thinkingInterval = null;
         let thinkingStartTime = null;
 
@@ -541,7 +515,7 @@
                 attachLabel.classList.remove('hidden');
             } else {
                 attachLabel.classList.add('hidden');
-                clearImage();
+                clearImages(); // Clear images if switching to non-vision model
             }
             
             if (currentModel.isFree) {
@@ -695,7 +669,12 @@
             } else {
                 container.innerHTML = '';
                 chat.messages.forEach(msg => {
-                    appendMessage(msg.role, msg.content, msg.image, false);
+                    // Обратная совместимость с сообщениями, где одно фото
+                    let displayImg = null;
+                    if (msg.image) {
+                        displayImg = Array.isArray(msg.image) ? msg.image[0] : msg.image;
+                    }
+                    appendMessage(msg.role, msg.content, displayImg, false);
                 });
             }
             
@@ -834,7 +813,6 @@
                             </div>
                         </div>
                         
-                        <!-- Expandable Details -->
                         <div id="thinkingDetails" class="hidden mt-3 pt-3 border-t border-blue-500/20">
                             <div class="text-xs text-neutral-400 space-y-2">
                                 <div class="flex items-start gap-2">
@@ -966,33 +944,84 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Image handling
-        function handleImage(event) {
-            const file = event.target.files[0];
-            if (file) {
+        // --- NEW MULTI-IMAGE HANDLERS ---
+        function handleImages(event) {
+            const files = Array.from(event.target.files);
+            
+            // Limit to 10 photos
+            const remainingSlots = 10 - currentImages.length;
+            const filesToProcess = files.slice(0, remainingSlots);
+
+            if (files.length > remainingSlots) {
+                addSystemMessage(`⚠️ Можно загрузить максимум 10 фото. Загружено первые ${remainingSlots}.`);
+            }
+
+            if (filesToProcess.length === 0) return;
+
+            const previewGrid = document.getElementById('previewGrid');
+            document.getElementById('imagePreviewBox').classList.remove('hidden');
+
+            filesToProcess.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    currentImage = e.target.result;
-                    document.getElementById('previewImg').src = currentImage;
-                    document.getElementById('imageName').textContent = file.name;
-                    document.getElementById('imagePreviewBox').classList.remove('hidden');
+                    const base64 = e.target.result;
+                    currentImages.push(base64);
+
+                    // Create thumbnail
+                    const div = document.createElement('div');
+                    div.className = 'relative w-16 h-16 group';
+                    div.innerHTML = `
+                        <img src="${base64}" class="w-full h-full object-cover rounded-lg border border-neutral-700">
+                        <button onclick="removeImage(${currentImages.length - 1})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    `;
+                    previewGrid.appendChild(div);
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         }
 
-        function clearImage() {
-            currentImage = null;
+        function removeImage(index) {
+            currentImages.splice(index, 1);
+            refreshPreviewGrid();
+        }
+
+        function refreshPreviewGrid() {
+            const previewGrid = document.getElementById('previewGrid');
+            previewGrid.innerHTML = '';
+            
+            if (currentImages.length === 0) {
+                clearImages();
+                return;
+            }
+
+            currentImages.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.className = 'relative w-16 h-16 group';
+                div.innerHTML = `
+                    <img src="${img}" class="w-full h-full object-cover rounded-lg border border-neutral-700">
+                    <button onclick="removeImage(${idx})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                `;
+                previewGrid.appendChild(div);
+            });
+        }
+
+        function clearImages() {
+            currentImages = [];
             document.getElementById('imageInput').value = '';
+            document.getElementById('previewGrid').innerHTML = '';
             document.getElementById('imagePreviewBox').classList.add('hidden');
         }
 
-        // Send message
+        // --- UPDATED SEND MESSAGE WITH CUSTOM TOKEN CALC ---
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             
-            if ((!message && !currentImage) || isGenerating) return;
+            if ((!message && currentImages.length === 0) || isGenerating) return;
             
             // Check balance for paid models
             if (!currentModel.isFree && balance <= 0) {
@@ -1002,41 +1031,69 @@
             }
 
             isGenerating = true;
-            hasImage = currentImage !== null;
+            hasImages = currentImages.length > 0;
             document.getElementById('sendBtn').disabled = true;
 
-            appendMessage('user', message, currentImage);
+            // Show user message (use first image for display if exists)
+            const displayImage = hasImages ? currentImages[0] : null;
+            appendMessage('user', message, displayImage);
             
-            let content = [];
-            if (currentImage && currentModel.hasVision) {
-                content.push({ type: "image_url", image_url: { url: currentImage } });
+            if (hasImages && currentImages.length > 1) {
+                // Add note about multiple images
+                const lastMsg = document.getElementById('messagesContainer').lastElementChild;
+                const info = document.createElement('div');
+                info.className = 'text-xs text-neutral-500 text-right mt-1 mr-12';
+                info.innerText = `+ ещё ${currentImages.length - 1} фото`;
+                lastMsg.after(info);
             }
+            
+            // Build content for API
+            let content = [];
+            
             if (message) {
                 content.push({ type: "text", text: message });
             }
 
-            const userMsg = message;
+            if (hasImages && currentModel.hasVision) {
+                currentImages.forEach(img => {
+                    content.push({ type: "image_url", image_url: { url: img } });
+                });
+            }
+
+            // Save for local logic (costs) before clearing
+            const sentImages = [...currentImages]; 
+            const sentText = message;
+            
+            // Clear input
             input.value = '';
             input.style.height = 'auto';
-            clearImage();
+            clearImages();
 
-            showThinking(hasImage, userMsg);
+            showThinking(hasImages, sentText);
 
             try {
-                const history = chats[currentChatId].messages.slice(-10).map(m => ({
-                    role: m.role,
-                    content: m.image && currentModel.hasVision ? [
-                        { type: "image_url", image_url: { url: m.image } },
-                        { type: "text", text: m.content }
-                    ] : m.content
-                }));
+                // History prep (handle legacy single-image messages)
+                const history = chats[currentChatId].messages.slice(-10).map(m => {
+                    if (m.image && !Array.isArray(m.image)) {
+                         return {
+                            role: m.role,
+                            content: currentModel.hasVision ? [
+                                { type: "text", text: m.content || "" },
+                                { type: "image_url", image_url: { url: m.image } }
+                            ] : m.content
+                        };
+                    }
+                    return { role: m.role, content: m.content };
+                });
 
+                const currentMsgPayload = { role: "user", content: content };
+                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: currentModel.id,
-                        messages: history
+                        messages: [...history, currentMsgPayload]
                     })
                 });
 
@@ -1049,12 +1106,18 @@
                     const reply = data.choices[0].message.content;
                     appendMessage('assistant', reply);
                     
-                    // Update balance for paid models
-                    if (!currentModel.isFree && data.usage) {
-                        let imageTokens = hasImage ? 1250 : 0;
+                    // --- CUSTOM TOKEN COST LOGIC ---
+                    if (!currentModel.isFree) {
+                        // Logic: 1 word = 3 tokens, 1 image = 1500 tokens
                         
-                        const inputCost = ((data.usage.prompt_tokens + imageTokens) / 1000000) * currentModel.priceInput;
-                        const outputCost = (data.usage.completion_tokens / 1000000) * currentModel.priceOutput;
+                        const inputWords = sentText.trim().split(/\s+/).filter(w => w.length > 0).length;
+                        const outputWords = reply.trim().split(/\s+/).filter(w => w.length > 0).length;
+                        
+                        const myInputTokens = (inputWords * 3) + (sentImages.length * 1500);
+                        const myOutputTokens = (outputWords * 3);
+                        
+                        const inputCost = (myInputTokens / 1000000) * currentModel.priceInput;
+                        const outputCost = (myOutputTokens / 1000000) * currentModel.priceOutput;
                         const totalCost = inputCost + outputCost;
                         
                         balance = Math.max(0, balance - totalCost);
@@ -1072,7 +1135,7 @@
             }
 
             isGenerating = false;
-            hasImage = false;
+            hasImages = false;
             document.getElementById('sendBtn').disabled = false;
         }
 
@@ -1099,4 +1162,4 @@
         });
     </script>
 </body>
-                    </html>
+    </html>
