@@ -2,12 +2,15 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Flux AI</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Фикс для мобильных браузеров */
         * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { height: 100dvh; /* Используем dynamic viewport height */ }
+        
         .chat-scroll::-webkit-scrollbar { width: 6px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
@@ -52,9 +55,12 @@
         .thinking-text-enter { animation: fade-in-up 0.3s ease-out; }
         .thinking-icon { animation: thinking-pulse 1.5s ease-in-out infinite; }
         .thinking-done { color: #22c55e !important; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+
+        /* Безопасные зоны для телефонов (чтобы ввод не перекрывался полоской "Домой") */
+        .safe-pb { padding-bottom: env(safe-area-inset-bottom, 20px); }
     </style>
 </head>
-<body class="bg-neutral-900 text-white h-screen flex overflow-hidden">
+<body class="bg-neutral-900 text-white flex overflow-hidden w-full fixed inset-0">
     
     <aside id="sidebar" class="w-72 bg-black flex flex-col h-full border-r border-neutral-800 flex-shrink-0 transition-all duration-300 lg:relative absolute z-40 -translate-x-full lg:translate-x-0">
         <div class="p-4 border-b border-neutral-800">
@@ -90,7 +96,7 @@
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto sidebar-scroll p-4">
+        <div class="flex-1 overflow-y-auto sidebar-scroll p-4 safe-pb">
             <h3 class="text-xs font-semibold text-neutral-500 uppercase mb-3">История чатов</h3>
             <div id="chatHistory" class="space-y-1">
             </div>
@@ -232,7 +238,7 @@
             </div>
         </div>
 
-        <div class="border-t border-neutral-800 p-4 flex-shrink-0 bg-neutral-900 z-50 relative">
+        <div class="border-t border-neutral-800 p-4 pt-2 safe-pb flex-shrink-0 bg-neutral-900 z-50 relative shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
             <div class="max-w-3xl mx-auto">
                 <div id="imagePreviewBox" class="hidden mb-3 p-2 bg-neutral-800/50 rounded-xl border border-neutral-800">
                     <div id="previewGrid" class="flex flex-wrap gap-2">
@@ -267,10 +273,6 @@
                         </svg>
                     </button>
                 </div>
-
-                <p class="text-xs text-neutral-600 text-center mt-3">
-                    Flux AI может допускать ошибки. Проверяйте важную информацию.
-                </p>
             </div>
         </div>
     </main>
@@ -306,10 +308,6 @@
                 <button onclick="activatePromo()" id="promoBtn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50">
                     Активировать
                 </button>
-
-                <p class="text-xs text-neutral-500 text-center">
-                    Промокоды можно получить в нашем Telegram-канале
-                </p>
             </div>
         </div>
     </div>
@@ -317,7 +315,14 @@
     <script>
         // State
         let currentChatId = null;
-        let chats = JSON.parse(localStorage.getItem('flux_chats') || '{}');
+        let chats = {};
+        try {
+            chats = JSON.parse(localStorage.getItem('flux_chats') || '{}');
+        } catch (e) {
+            console.error('Ошибка чтения чатов', e);
+            chats = {};
+        }
+        
         let balance = parseFloat(localStorage.getItem('flux_balance') || '0');
         let usedPromos = JSON.parse(localStorage.getItem('flux_used_promos') || '[]');
         
@@ -366,7 +371,9 @@
                 if (lastChatId && chats[lastChatId]) {
                     loadChat(lastChatId);
                 } else {
-                    loadChat(Object.keys(chats)[0]);
+                    const keys = Object.keys(chats);
+                    if(keys.length > 0) loadChat(keys[0]);
+                    else createNewChat();
                 }
             }
             
@@ -395,13 +402,12 @@
             document.getElementById('modelName').textContent = currentModel.name;
             document.getElementById('modelIcon').textContent = currentModel.icon;
             
-            // Show/hide attach button based on vision support
             const attachLabel = document.getElementById('attachLabel');
             if (currentModel.hasVision) {
                 attachLabel.classList.remove('hidden');
             } else {
                 attachLabel.classList.add('hidden');
-                clearImages(); // Clear images if switching to non-vision model
+                clearImages(); 
             }
             
             if (currentModel.isFree) {
@@ -411,7 +417,6 @@
             }
         }
 
-        // Sidebar
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -419,12 +424,10 @@
             overlay.classList.toggle('hidden');
         }
 
-        // Balance - UPDATED TO SHOW 4 DECIMALS
         function updateBalanceDisplay() {
             document.getElementById('balanceDisplay').textContent = balance.toFixed(4) + ' ₽';
         }
 
-        // Promo Modal
         function openPromoModal() {
             document.getElementById('promoModal').classList.remove('hidden');
             document.getElementById('promoModal').classList.add('flex');
@@ -498,7 +501,6 @@
             btn.textContent = 'Активировать';
         }
 
-        // Chat Management
         function createNewChat() {
             const id = 'chat_' + Date.now();
             chats[id] = {
@@ -512,7 +514,11 @@
             renderChatHistory();
             
             if (window.innerWidth < 1024) {
-                toggleSidebar();
+                // close sidebar on mobile if open
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
             }
         }
 
@@ -525,7 +531,7 @@
             
             const container = document.getElementById('messagesContainer');
             
-            if (chat.messages.length === 0) {
+            if (!chat.messages || chat.messages.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12">
                         <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
@@ -534,28 +540,11 @@
                         <h2 class="text-2xl font-bold mb-2">Добро пожаловать в Flux AI</h2>
                         <p class="text-neutral-400 max-w-md mx-auto">Задайте вопрос, загрузите изображение или начните диалог</p>
                     </div>
-                    <div class="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <div class="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4">
-                            <div class="text-lg mb-2">💬</div>
-                            <h3 class="font-medium mb-1">Текстовые запросы</h3>
-                            <p class="text-sm text-neutral-400">Отвечаю на любые вопросы</p>
-                        </div>
-                        <div class="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4">
-                            <div class="text-lg mb-2">🖼️</div>
-                            <h3 class="font-medium mb-1">Анализ фото</h3>
-                            <p class="text-sm text-neutral-400">Понимаю изображения</p>
-                        </div>
-                        <div class="bg-neutral-800/50 border border-neutral-700 rounded-xl p-4">
-                            <div class="text-lg mb-2">⚡</div>
-                            <h3 class="font-medium mb-1">Быстрые ответы</h3>
-                            <p class="text-sm text-neutral-400">Мгновенная генерация</p>
-                        </div>
-                    </div>
                 `;
             } else {
                 container.innerHTML = '';
                 chat.messages.forEach(msg => {
-                    // Обратная совместимость с сообщениями, где одно фото
+                    // Обратная совместимость
                     let displayImg = null;
                     if (msg.image) {
                         displayImg = Array.isArray(msg.image) ? msg.image[0] : msg.image;
@@ -576,8 +565,9 @@
                 renderChatHistory();
                 
                 if (currentChatId === chatId) {
-                    if (Object.keys(chats).length > 0) {
-                        loadChat(Object.keys(chats)[0]);
+                    const keys = Object.keys(chats);
+                    if (keys.length > 0) {
+                        loadChat(keys[0]);
                     } else {
                         createNewChat();
                     }
@@ -585,8 +575,31 @@
             }
         }
 
+        // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ (УДАЛЯЕТ ФОТО ИЗ ИСТОРИИ) ---
         function saveChats() {
-            localStorage.setItem('flux_chats', JSON.stringify(chats));
+            // Создаем копию чатов, чтобы не портить текущее отображение (где картинки есть)
+            const chatsToSave = JSON.parse(JSON.stringify(chats));
+            
+            // Проходим по всем чатам и удаляем данные картинок, чтобы не забить память
+            Object.values(chatsToSave).forEach(chat => {
+                if (chat.messages) {
+                    chat.messages.forEach(msg => {
+                        if (msg.image) {
+                            // Заменяем картинку на заглушку
+                            msg.image = null; 
+                            msg.content = msg.content + '\n[Картинка не сохранена в истории для экономии памяти]';
+                        }
+                    });
+                }
+            });
+
+            try {
+                localStorage.setItem('flux_chats', JSON.stringify(chatsToSave));
+            } catch (e) {
+                console.error('Storage full', e);
+                // Если все равно переполнилось, можно попробовать удалить старые чаты или просто игнорировать
+                addSystemMessage('⚠️ История переполнена. Старые сообщения могут не сохраниться.');
+            }
         }
 
         function renderChatHistory() {
@@ -598,7 +611,7 @@
                     <svg class="w-4 h-4 text-neutral-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                     </svg>
-                    <span class="flex-1 truncate text-sm">${escapeHtml(chat.title)}</span>
+                    <span class="flex-1 truncate text-sm">${escapeHtml(chat.title || 'Новый чат')}</span>
                     <button onclick="deleteChat('${chat.id}', event)" class="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-700 rounded transition">
                         <svg class="w-3 h-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -608,7 +621,6 @@
             `).join('');
         }
 
-        // Messages
         function appendMessage(role, content, image = null, save = true) {
             const container = document.getElementById('messagesContainer');
             
@@ -648,6 +660,7 @@
             container.appendChild(div);
             
             if (save && currentChatId) {
+                // Сохраняем в память JS (с картинкой)
                 chats[currentChatId].messages.push({ role, content, image });
                 
                 if (role === 'user' && chats[currentChatId].messages.filter(m => m.role === 'user').length === 1) {
@@ -656,6 +669,7 @@
                     renderChatHistory();
                 }
                 
+                // При сохранении в LocalStorage картинка будет вырезана (см. функцию saveChats)
                 saveChats();
             }
             
@@ -672,7 +686,6 @@
             scrollToBottom();
         }
 
-        // Beautiful Thinking Indicator
         function showThinking(withImage = false, userMessage = '') {
             const container = document.getElementById('messagesContainer');
             thinkingStartTime = Date.now();
@@ -681,133 +694,24 @@
             const div = document.createElement('div');
             div.id = 'thinkingIndicator';
             div.className = 'flex gap-4';
-            
             div.innerHTML = `
-                <div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    ${cubeSmall}
-                </div>
+                <div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">${cubeSmall}</div>
                 <div class="flex-1 max-w-2xl">
                     <div class="thinking-container rounded-2xl px-4 py-3 relative overflow-hidden">
                         <div class="thinking-shimmer absolute inset-0"></div>
                         <div class="relative flex items-center gap-3">
                             <span id="thinkingIcon" class="thinking-icon text-lg">${withImage ? '👁️' : '📖'}</span>
                             <span id="thinkingText" class="thinking-text-enter text-blue-400 font-medium">${withImage ? 'Рассматриваю фото' : 'Читаю запрос'}</span>
-                            <div id="thinkingDots" class="flex items-center ml-1">
-                                <span class="thinking-dot"></span>
-                                <span class="thinking-dot"></span>
-                                <span class="thinking-dot"></span>
-                            </div>
-                        </div>
-                        
-                        <div id="thinkingDetails" class="hidden mt-3 pt-3 border-t border-blue-500/20">
-                            <div class="text-xs text-neutral-400 space-y-2">
-                                <div class="flex items-start gap-2">
-                                    <span class="text-blue-400">Запрос:</span>
-                                    <span class="text-neutral-300" id="thinkingQuery">${escapeHtml(userMessage.substring(0, 100))}${userMessage.length > 100 ? '...' : ''}</span>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <span class="text-blue-400">Модель:</span>
-                                    <span class="text-neutral-300">${currentModel.name}</span>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <span class="text-blue-400">Этап:</span>
-                                    <span class="text-neutral-300" id="thinkingStage">Обработка входных данных</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
-                    <button onclick="toggleThinkingDetails()" id="thinkingToggle" class="text-xs text-neutral-500 hover:text-neutral-400 mt-2 transition flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                        Подробнее
-                    </button>
                 </div>
             `;
-            
             container.appendChild(div);
             scrollToBottom();
-            
-            // Animate through states
-            const states = withImage 
-                ? [
-                    { text: 'Рассматриваю фото', icon: '👁️', stage: 'Анализ изображения' },
-                    { text: 'Читаю запрос', icon: '📖', stage: 'Обработка текста' },
-                    { text: 'Думаю', icon: '🧠', stage: 'Генерация ответа' },
-                    { text: 'Готово', icon: '✓', stage: 'Завершено', done: true }
-                  ]
-                : [
-                    { text: 'Читаю запрос', icon: '📖', stage: 'Обработка текста' },
-                    { text: 'Думаю', icon: '🧠', stage: 'Генерация ответа' },
-                    { text: 'Готово', icon: '✓', stage: 'Завершено', done: true }
-                  ];
-            
-            let currentState = 0;
-            thinkingInterval = setInterval(() => {
-                const indicator = document.getElementById('thinkingIndicator');
-                if (!indicator) {
-                    clearInterval(thinkingInterval);
-                    return;
-                }
-                
-                currentState++;
-                if (currentState < states.length) {
-                    const state = states[currentState];
-                    const textEl = document.getElementById('thinkingText');
-                    const iconEl = document.getElementById('thinkingIcon');
-                    const stageEl = document.getElementById('thinkingStage');
-                    const dotsEl = document.getElementById('thinkingDots');
-                    
-                    if (textEl && iconEl) {
-                        // Add animation class
-                        textEl.classList.remove('thinking-text-enter');
-                        void textEl.offsetWidth; // Trigger reflow
-                        textEl.classList.add('thinking-text-enter');
-                        
-                        textEl.textContent = state.text;
-                        iconEl.textContent = state.icon;
-                        
-                        if (stageEl) stageEl.textContent = state.stage;
-                        
-                        if (state.done) {
-                            textEl.classList.add('thinking-done');
-                            iconEl.classList.add('thinking-done');
-                            iconEl.classList.remove('thinking-icon');
-                            dotsEl.classList.add('hidden');
-                        }
-                    }
-                }
-            }, 1200);
-        }
-
-        function toggleThinkingDetails() {
-            const details = document.getElementById('thinkingDetails');
-            const toggle = document.getElementById('thinkingToggle');
-            if (details && toggle) {
-                details.classList.toggle('hidden');
-                if (details.classList.contains('hidden')) {
-                    toggle.innerHTML = `
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                        Подробнее
-                    `;
-                } else {
-                    toggle.innerHTML = `
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                        </svg>
-                        Скрыть
-                    `;
-                }
-            }
         }
 
         function hideThinking() {
-            if (thinkingInterval) {
-                clearInterval(thinkingInterval);
-                thinkingInterval = null;
-            }
+            if (thinkingInterval) { clearInterval(thinkingInterval); thinkingInterval = null; }
             document.getElementById('thinkingIndicator')?.remove();
         }
 
@@ -820,6 +724,7 @@
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
@@ -833,15 +738,12 @@
         // --- NEW MULTI-IMAGE HANDLERS ---
         function handleImages(event) {
             const files = Array.from(event.target.files);
-            
-            // Limit to 10 photos
             const remainingSlots = 10 - currentImages.length;
             const filesToProcess = files.slice(0, remainingSlots);
 
             if (files.length > remainingSlots) {
-                addSystemMessage(`⚠️ Можно загрузить максимум 10 фото. Загружено первые ${remainingSlots}.`);
+                addSystemMessage(`⚠️ Максимум 10 фото. Загружено ${remainingSlots}.`);
             }
-
             if (filesToProcess.length === 0) return;
 
             const previewGrid = document.getElementById('previewGrid');
@@ -852,8 +754,6 @@
                 reader.onload = (e) => {
                     const base64 = e.target.result;
                     currentImages.push(base64);
-
-                    // Create thumbnail
                     const div = document.createElement('div');
                     div.className = 'relative w-16 h-16 group flex-shrink-0';
                     div.innerHTML = `
@@ -876,12 +776,10 @@
         function refreshPreviewGrid() {
             const previewGrid = document.getElementById('previewGrid');
             previewGrid.innerHTML = '';
-            
             if (currentImages.length === 0) {
                 clearImages();
                 return;
             }
-
             currentImages.forEach((img, idx) => {
                 const div = document.createElement('div');
                 div.className = 'relative w-16 h-16 group flex-shrink-0';
@@ -902,7 +800,6 @@
             document.getElementById('imagePreviewBox').classList.add('hidden');
         }
 
-        // --- UPDATED SEND MESSAGE WITH ROBUST ERROR HANDLING ---
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -910,7 +807,6 @@
             try {
                 if ((!message && currentImages.length === 0) || isGenerating) return;
                 
-                // Check balance for paid models
                 if (!currentModel.isFree && balance <= 0) {
                     addSystemMessage('⚠️ Активируйте промокод для использования платной модели');
                     openPromoModal();
@@ -921,12 +817,10 @@
                 hasImages = currentImages.length > 0;
                 document.getElementById('sendBtn').disabled = true;
 
-                // Show user message (use first image for display if exists)
                 const displayImage = hasImages ? currentImages[0] : null;
                 appendMessage('user', message, displayImage);
                 
                 if (hasImages && currentImages.length > 1) {
-                    // Add note about multiple images
                     const lastMsg = document.getElementById('messagesContainer').lastElementChild;
                     const info = document.createElement('div');
                     info.className = 'text-xs text-neutral-500 text-right mt-1 mr-12';
@@ -934,32 +828,23 @@
                     lastMsg.after(info);
                 }
                 
-                // Build content for API
                 let content = [];
-                
-                if (message) {
-                    content.push({ type: "text", text: message });
-                }
-
+                if (message) content.push({ type: "text", text: message });
                 if (hasImages && currentModel.hasVision) {
-                    currentImages.forEach(img => {
-                        content.push({ type: "image_url", image_url: { url: img } });
-                    });
+                    currentImages.forEach(img => content.push({ type: "image_url", image_url: { url: img } }));
                 }
 
-                // Save for local logic (costs) before clearing
                 const sentImages = [...currentImages]; 
                 const sentText = message;
                 
-                // Clear input
                 input.value = '';
                 input.style.height = 'auto';
                 clearImages();
 
                 showThinking(hasImages, sentText);
 
-                // History prep (handle legacy single-image messages)
                 const history = chats[currentChatId].messages.slice(-10).map(m => {
+                    // Старые сообщения в истории могут быть уже без картинок (мы их удаляем при сохранении)
                     if (m.image && !Array.isArray(m.image)) {
                          return {
                             role: m.role,
@@ -972,14 +857,12 @@
                     return { role: m.role, content: m.content };
                 });
 
-                const currentMsgPayload = { role: "user", content: content };
-                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: currentModel.id,
-                        messages: [...history, currentMsgPayload]
+                        messages: [...history, { role: "user", content: content }]
                     })
                 });
 
@@ -987,39 +870,26 @@
                 hideThinking();
 
                 if (!response.ok || data.error) {
-                    const errorMsg = data.error || data.message || "Неизвестная ошибка сервера";
+                    const errorMsg = data.error || data.message || "Ошибка сервера";
                     addSystemMessage('❌ Ошибка API: ' + errorMsg);
-                    console.error('API Error:', data);
                 } else {
                     const reply = data.choices[0].message.content;
                     appendMessage('assistant', reply);
                     
-                    // --- CUSTOM TOKEN COST LOGIC ---
                     if (!currentModel.isFree) {
-                        // Logic: 1 word = 3 tokens, 1 image = 1500 tokens
-                        
                         const inputWords = sentText.trim().split(/\s+/).filter(w => w.length > 0).length;
                         const outputWords = reply.trim().split(/\s+/).filter(w => w.length > 0).length;
-                        
                         const myInputTokens = (inputWords * 3) + (sentImages.length * 1500);
                         const myOutputTokens = (outputWords * 3);
-                        
-                        const inputCost = (myInputTokens / 1000000) * currentModel.priceInput;
-                        const outputCost = (myOutputTokens / 1000000) * currentModel.priceOutput;
-                        const totalCost = inputCost + outputCost;
+                        const totalCost = ((myInputTokens / 1000000) * currentModel.priceInput) + ((myOutputTokens / 1000000) * currentModel.priceOutput);
                         
                         balance = Math.max(0, balance - totalCost);
                         localStorage.setItem('flux_balance', balance.toString());
                         updateBalanceDisplay();
                     }
-                    
-                    if (data.usage) {
-                        totalTokens += data.usage.total_tokens || 0;
-                    }
                 }
             } catch (error) {
                 hideThinking();
-                console.error(error);
                 addSystemMessage('❌ Критическая ошибка: ' + error.message);
             } finally {
                 isGenerating = false;
@@ -1040,15 +910,8 @@
             el.style.height = Math.min(el.scrollHeight, 160) + 'px';
         }
 
-        // Modal close on backdrop click
-        document.getElementById('promoModal').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) closePromoModal();
-        });
-        
-        // Enter to activate promo
-        document.getElementById('promoInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') activatePromo();
-        });
+        document.getElementById('promoModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closePromoModal(); });
+        document.getElementById('promoInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') activatePromo(); });
     </script>
 </body>
     </html>
