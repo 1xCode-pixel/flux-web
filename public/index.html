@@ -133,7 +133,11 @@
                         <button onclick="selectModel('mistralai/mistral-small-3.1-24b-instruct:free', 'Mistral Small 3.1', 'M', 0, 0, true, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">M</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2"><span class="font-medium">Mistral Small 3.1</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">Mistral Small 3.1</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
+                                </div>
                                 <p class="text-xs text-neutral-500 truncate">24B параметров • Быстрая и умная</p>
                             </div>
                         </button>
@@ -141,8 +145,26 @@
                         <button onclick="selectModel('google/gemma-3-27b-it:free', 'Gemma 3 27B', 'G', 0, 0, true, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">G</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2"><span class="font-medium">Gemma 3 27B</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">Gemma 3 27B</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
+                                </div>
                                 <p class="text-xs text-neutral-500 truncate">Google • 27B параметров</p>
+                            </div>
+                        </button>
+
+                        <button onclick="selectModel('openai/gpt-oss-120b:exacto', 'GPT OSS 120B (Free)', 'O', 0, 0, true, false)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
+                            <div class="w-10 h-10 bg-gray-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <span class="text-white font-bold">O</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">GPT OSS 120B</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Text</span>
+                                </div>
+                                <p class="text-xs text-neutral-500 truncate">OpenAI • Limit: 20 req/h</p>
                             </div>
                         </button>
 
@@ -151,7 +173,10 @@
                         <button onclick="selectModel('bytedance-seed/seed-1.6-flash', 'Seed 1.6 Flash', 'S', 50.00, 50.00, false, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-black font-bold">S</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2"><span class="font-medium">Seed 1.6 Flash</span><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">Seed 1.6 Flash</span>
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
+                                </div>
                                 <p class="text-xs text-neutral-500">ByteDance • Input: 50.00₽ • Output: 50.00₽</p>
                             </div>
                         </button>
@@ -159,19 +184,20 @@
                         <button onclick="selectModel('openai/gpt-4o-mini', 'GPT-4o Mini', 'O', 100.00, 100.00, false, false)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">O</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2"><span class="font-medium">GPT-4o Mini</span></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">GPT-4o Mini</span>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Text</span>
+                                </div>
                                 <p class="text-xs text-neutral-500">OpenAI • Input: 100.00₽ • Output: 100.00₽</p>
                             </div>
                         </button>
 
                         <button onclick="selectModel('xiaomi/mimo-v2-flash', 'Mimo V2 Flash', 'X', 30.00, 60.00, false, false)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
-                            <div class="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <span class="text-white font-bold">X</span>
-                            </div>
+                            <div class="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">X</span></div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="font-medium">Mimo V2 Flash</span>
-                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Code</span>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Text</span>
                                 </div>
                                 <p class="text-xs text-neutral-500">Xiaomi • Оптимизирована для кода</p>
                             </div>
@@ -184,6 +210,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="font-medium">GPT OSS 120B</span>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Text</span>
                                 </div>
                                 <p class="text-xs text-neutral-500">OpenAI • Input: 30.00₽ • Output: 50.00₽</p>
                             </div>
@@ -276,6 +303,11 @@
         
         const cubeSmall = `<div class="iso-cube iso-cube-sm"><div class="iso-cube-face"></div></div>`;
         const cubeLarge = `<div class="iso-cube iso-cube-lg"><div class="iso-cube-face"></div></div>`;
+
+        // Список моделей с ограничением запросов
+        const LIMITED_MODELS = [
+            'openai/gpt-oss-120b:exacto'
+        ];
 
         marked.setOptions({ breaks: true });
 
@@ -555,6 +587,27 @@
             if ((!message && currentImages.length === 0) || isGenerating) return;
             if (!currentModel.isFree && balance <= 0) { addSystemMessage('⚠️ Нет средств'); openPromoModal(); return; }
 
+            // --- ЛОГИКА ОГРАНИЧЕНИЯ ЗАПРОСОВ (20 в час) ---
+            if (LIMITED_MODELS.includes(currentModel.id)) {
+                const now = Date.now();
+                const oneHour = 60 * 60 * 1000;
+                let timestamps = JSON.parse(localStorage.getItem(`limit_${currentModel.id}`) || '[]');
+                
+                // Фильтруем старые запросы (старше 1 часа)
+                timestamps = timestamps.filter(t => now - t < oneHour);
+                
+                if (timestamps.length >= 20) {
+                    const oldest = timestamps[0];
+                    const waitTime = Math.ceil(((oldest + oneHour) - now) / 60000);
+                    addSystemMessage(`⚠️ Лимит (20/час) исчерпан. Подождите ${waitTime} мин.`);
+                    return;
+                }
+                
+                // Добавляем текущий запрос
+                timestamps.push(now);
+                localStorage.setItem(`limit_${currentModel.id}`, JSON.stringify(timestamps));
+            }
+
             isGenerating = true;
             hasImages = currentImages.length > 0;
             document.getElementById('sendBtn').disabled = true;
@@ -628,4 +681,4 @@
         document.getElementById('promoInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') activatePromo(); });
     </script>
 </body>
-</html>
+    </html>
