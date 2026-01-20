@@ -133,11 +133,7 @@
                         <button onclick="selectModel('mistralai/mistral-small-3.1-24b-instruct:free', 'Mistral Small 3.1', 'M', 0, 0, true, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">M</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium">Mistral Small 3.1</span>
-                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>
-                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
-                                </div>
+                                <div class="flex items-center gap-2"><span class="font-medium">Mistral Small 3.1</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span></div>
                                 <p class="text-xs text-neutral-500 truncate">24B параметров • Быстрая и умная</p>
                             </div>
                         </button>
@@ -145,12 +141,22 @@
                         <button onclick="selectModel('google/gemma-3-27b-it:free', 'Gemma 3 27B', 'G', 0, 0, true, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">G</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium">Gemma 3 27B</span>
-                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>
-                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
-                                </div>
+                                <div class="flex items-center gap-2"><span class="font-medium">Gemma 3 27B</span><span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span></div>
                                 <p class="text-xs text-neutral-500 truncate">Google • 27B параметров</p>
+                            </div>
+                        </button>
+
+                        <button onclick="selectModel('deepseek/deepseek-r1-0528:free', 'DeepSeek R1', 'D', 0, 0, true, false)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
+                            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <span class="text-white font-bold">D</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">DeepSeek R1</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Code</span>
+                                </div>
+                                <p class="text-xs text-neutral-500 truncate">DeepSeek • Мощная логика и код</p>
                             </div>
                         </button>
 
@@ -173,10 +179,7 @@
                         <button onclick="selectModel('bytedance-seed/seed-1.6-flash', 'Seed 1.6 Flash', 'S', 50.00, 50.00, false, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-black font-bold">S</span></div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium">Seed 1.6 Flash</span>
-                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
-                                </div>
+                                <div class="flex items-center gap-2"><span class="font-medium">Seed 1.6 Flash</span><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span></div>
                                 <p class="text-xs text-neutral-500">ByteDance • Input: 50.00₽ • Output: 50.00₽</p>
                             </div>
                         </button>
@@ -198,8 +201,9 @@
                                 <div class="flex items-center gap-2">
                                     <span class="font-medium">Mimo V2 Flash</span>
                                     <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Text</span>
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Code</span>
                                 </div>
-                                <p class="text-xs text-neutral-500">Xiaomi • Оптимизирована для кода</p>
+                                <p class="text-xs text-neutral-500">Xiaomi • Для текста и кода</p>
                             </div>
                         </button>
 
@@ -681,4 +685,4 @@
         document.getElementById('promoInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') activatePromo(); });
     </script>
 </body>
-    </html>
+                                                                              </html>
