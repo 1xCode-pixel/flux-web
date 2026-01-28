@@ -187,6 +187,20 @@
                             </div>
                         </button>
 
+                        <button onclick="selectModel('anthropic/claude-3-haiku', 'Claude 3 Haiku', 'icons/claude.png', 50.00, 115.00, false, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
+                      <div class="w-10 h-10 bg-[#D97757] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                     <img src="icons/claude.png" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                <span class="text-white font-bold hidden">C</span>
+                </div>
+                   <div class="flex-1 min-w-0">
+             <div class="flex items-center gap-2">
+            <span class="font-medium">Claude 3 Haiku</span>
+            <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
+                </div>
+                <p class="text-xs text-neutral-500">Anthropic • Input: 50₽ • Output: 115₽</p>
+                    </div>
+                        </button>
+
                         <button onclick="selectModel('xiaomi/mimo-v2-flash', 'Mimo V2 Flash', 'X', 30.00, 60.00, false, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
                             <div class="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center flex-shrink-0"><span class="text-white font-bold">X</span></div>
                             <div class="flex-1 min-w-0">
@@ -345,12 +359,49 @@
         }
         
         function updateModelUI() {
-            document.getElementById('modelName').textContent = currentModel.name;
-            document.getElementById('modelIcon').textContent = currentModel.icon;
-            const attachLabel = document.getElementById('attachLabel');
-            if (currentModel.hasVision) { attachLabel.classList.remove('hidden'); } else { attachLabel.classList.add('hidden'); clearImages(); }
-            if (currentModel.isFree) document.getElementById('priceInfo').textContent = 'Бесплатно';
-            else document.getElementById('priceInfo').textContent = `Input: ${currentModel.priceInput}₽ • Output: ${currentModel.priceOutput}₽`;
+    document.getElementById('modelName').textContent = currentModel.name;
+    
+    const iconSpan = document.getElementById('modelIcon');
+    const iconContainer = iconSpan.parentElement;
+    
+    // Проверяем: если в иконке есть точка или слэш — это картинка
+    const isImage = currentModel.icon.includes('/') || currentModel.icon.includes('.');
+
+    if (isImage) {
+        // --- РЕЖИМ КАРТИНКИ (Claude) ---
+        iconSpan.style.display = 'none'; // Скрываем букву
+        
+        let img = iconContainer.querySelector('img');
+        if (!img) {
+            img = document.createElement('img');
+            img.className = 'w-full h-full object-cover rounded-lg';
+            iconContainer.appendChild(img);
+        }
+        img.src = currentModel.icon;
+        img.style.display = 'block';
+        iconContainer.style.backgroundColor = 'transparent'; 
+    } else {
+        // --- РЕЖИМ БУКВЫ (Остальные) ---
+        iconSpan.textContent = currentModel.icon;
+        iconSpan.style.display = 'block';
+        
+        const img = iconContainer.querySelector('img');
+        if (img) img.style.display = 'none';
+        
+        iconContainer.style.backgroundColor = 'white';
+    }
+
+    // Остальное без изменений
+    const attachLabel = document.getElementById('attachLabel');
+    if (currentModel.hasVision) { 
+        attachLabel.classList.remove('hidden'); 
+    } else { 
+        attachLabel.classList.add('hidden'); 
+        clearImages(); 
+    }
+
+    if (currentModel.isFree) document.getElementById('priceInfo').textContent = 'Бесплатно';
+    else document.getElementById('priceInfo').textContent = `Input: ${currentModel.priceInput}₽ • Output: ${currentModel.priceOutput}₽`;
         }
         
         function toggleSidebar() {
@@ -540,7 +591,7 @@
 
         function handleImages(event) {
             const files = Array.from(event.target.files);
-            const remainingSlots = 10 - currentImages.length;
+            const remainingSlots = 1 - currentImages.length;
             const filesToProcess = files.slice(0, remainingSlots);
             
             if (files.length > remainingSlots) addSystemMessage(`⚠️ Максимум 10 фото. Загружено ${remainingSlots}.`);
