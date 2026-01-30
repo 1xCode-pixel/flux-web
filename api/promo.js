@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     const PROMOCODES = {
         'FLUX100': 100,
         'FLUX50': 50,
-        'WELCOME': 25,
+        'WELCOME': 5,
         'START': 10,
         'VIP500': 500,
         'TEST10': 10,
