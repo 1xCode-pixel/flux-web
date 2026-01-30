@@ -187,7 +187,7 @@
                             </div>
                         </button>
 
-                        <button onclick="selectModel('anthropic/claude-3-haiku', 'Claude 3 Haiku', 'icons/claude.png', 50.00, 115.00, false, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
+  <button onclick="selectModel('anthropic/claude-3-haiku', 'Claude 3 Haiku', 'icons/claude.png', 50.00, 115.00, false, false)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
     <div class="w-10 h-10 bg-[#D97757] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative">
         <img src="icons/claude.png" alt="C" class="w-full h-full object-cover absolute inset-0" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
         <span class="text-white font-bold hidden relative z-10">C</span>
@@ -195,10 +195,11 @@
     <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
             <span class="font-medium">Claude 3 Haiku</span>
-            <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Vision</span>
+            <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Быстрая</span>
         </div>
         <p class="text-xs text-neutral-500">Anthropic • Input: 50₽ • Output: 115₽</p>
     </div>
+  </button>
                         </button>
 
                         <button onclick="selectModel('xiaomi/mimo-v2-flash', 'Mimo V2 Flash', 'X', 30.00, 60.00, false, true)" class="model-option w-full flex items-center gap-3 p-3 hover:bg-neutral-800 rounded-xl transition text-left">
